@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NTE ダメージ計算機</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #060810;
+  --bg2:      #0c1120;
+  --bg3:      #111928;
+  --bg4:      #0a0f1c;
+  --border:   #1a2540;
+  --border2:  #22304e;
+  --blue:     #3a8fff;
+  --blue2:    #1a5fd8;
+  --blue-g:   rgba(58,143,255,.14);
+  --purple:   #8855f0;
+  --purple-g: rgba(136,85,240,.14);
+  --teal:     #0fc98a;
+  --teal-g:   rgba(15,201,138,.13);
+  --red:      #ef4560;
+  --red-g:    rgba(239,69,96,.13);
+  --amber:    #f0a020;
+  --amber-g:  rgba(240,160,32,.13);
+  --sky:      #40c8f0;
+  --txt:      #c0ceec;
+  --txt2:     #5a7090;
+  --txt3:     #8a9ec0;
+  --white:    #e8f2ff;
+  --mono:     'JetBrains Mono', monospace;
+  --head:     'Exo 2', 'Noto Sans JP', sans-serif;
+  --body:     'Noto Sans JP', sans-serif;
+  --r:        8px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--txt);
+  font-family: var(--body);
+  font-size: 13px;
+  min-height: 100vh;
+  line-height: 1.55;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(58,143,255,.07), transparent),
+    repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(255,255,255,.015) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(255,255,255,.015) 40px);
+}
+
+/* ── HEADER ─────────────────────────────────────── */
+header {
+  text-align: center;
+  padding: 32px 20px 22px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 5%, var(--blue) 35%, var(--purple) 65%, transparent 95%);
+}
+.logo {
+  font-family: var(--head);
+  font-size: 2.6rem;
+  font-weight: 800;
+  letter-spacing: .14em;
+  background: linear-gradient(135deg, #5ab0ff 0%, #c080ff 60%, #70e0ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: inline-block;
+}
+.logo-sub {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .22em;
+  color: var(--txt2);
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+
+/* ── LAYOUT ──────────────────────────────────────── */
+.wrap { max-width: 1280px; margin: 0 auto; padding: 20px 16px 48px; }
+
+.row3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 14px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+
+/* ── CARD ────────────────────────────────────────── */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 15px;
+  position: relative;
+}
+.card-blue   { border-left: 3px solid var(--blue); }
+.card-purple { border-left: 3px solid var(--purple); }
+.card-teal   { border-left: 3px solid var(--teal); }
+.card-red    { border-left: 3px solid var(--red); }
+.card-amber  { border-left: 3px solid var(--amber); }
+
+.card-title {
+  font-family: var(--head);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--txt3);
+  margin-bottom: 13px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.card-title .ico { font-size: 14px; }
+
+/* ── FIELD ───────────────────────────────────────── */
+.fl { margin-bottom: 9px; }
+.fl-label {
+  display: block;
+  font-size: 10px;
+  letter-spacing: .08em;
+  color: var(--txt2);
+  margin-bottom: 3px;
+}
+.fl-row { display: flex; gap: 7px; }
+.fl-row .fl { flex: 1; }
+.fl-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+
+input[type="number"] {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 5px;
+  color: var(--white);
+  font-family: var(--mono);
+  font-size: 13px;
+  padding: 6px 9px;
+  outline: none;
+  transition: border-color .18s, box-shadow .18s;
+  -moz-appearance: textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+input[type="number"]:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 2px rgba(58,143,255,.18);
+}
+
+/* ── SELECT BUTTONS ──────────────────────────────── */
+.sel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 11px; }
+
+.sel-btn {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 7px;
+  padding: 9px 11px;
+  cursor: pointer;
+  text-align: left;
+  color: var(--txt2);
+  transition: all .17s;
+  width: 100%;
+  font-family: var(--body);
+}
+.sel-btn:hover { background: #141f34; color: var(--txt); border-color: var(--border); }
+.sel-btn.on-blue  { background: var(--blue-g);   border-color: var(--blue);   color: #90c8ff; }
+.sel-btn.on-purp  { background: var(--purple-g); border-color: var(--purple); color: #c090ff; }
+.sel-btn.on-full  { display: block; margin-bottom: 6px; }
+
+.sel-name { font-weight: 700; font-size: 13px; display: block; margin-bottom: 1px; }
+.sel-tag  { font-size: 10px; font-family: var(--mono); opacity: .75; }
+.sel-btn.on-blue .sel-tag  { color: var(--blue);   opacity: .9; }
+.sel-btn.on-purp .sel-tag  { color: var(--purple); opacity: .9; }
+
+/* ── CONVEX BUTTONS ──────────────────────────────── */
+.cvx-row { display: flex; gap: 5px; flex-wrap: wrap; }
+
+.cvx-btn {
+  width: 34px; height: 34px;
+  border-radius: 6px;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  color: var(--txt2);
+  font-family: var(--head);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .16s;
+}
+.cvx-btn:hover { border-color: var(--border); color: var(--txt); }
+.cvx-btn.on {
+  background: rgba(136,85,240,.22);
+  border-color: var(--purple);
+  color: #c090ff;
+  box-shadow: 0 0 8px rgba(136,85,240,.3);
+}
+
+/* ── TOGGLE BUTTONS ──────────────────────────────── */
+.tog {
+  width: 100%;
+  display: flex; align-items: center; gap: 9px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  background: var(--bg3);
+  border: 1px solid transparent;
+  cursor: pointer;
+  color: var(--txt2);
+  font-family: var(--body);
+  font-size: 12px;
+  text-align: left;
+  transition: all .17s;
+  margin-bottom: 5px;
+}
+.tog:hover:not(:disabled) { background: #141f34; color: var(--txt); }
+.tog.on { background: var(--blue-g); border-color: var(--blue); color: #90c8ff; }
+.tog:disabled { opacity: .3; cursor: not-allowed; }
+
+.tog-box {
+  width: 15px; height: 15px;
+  border-radius: 3px;
+  border: 1px solid var(--border2);
+  background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700;
+  flex-shrink: 0;
+  transition: all .17s;
+}
+.tog.on .tog-box { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+/* ── BOSS TOGGLE ─────────────────────────────────── */
+.boss-row { display: flex; gap: 5px; }
+.boss-btn {
+  flex: 1; padding: 6px; border-radius: 5px;
+  background: var(--bg3); border: 1px solid var(--border2);
+  cursor: pointer; font-size: 12px; font-weight: 600;
+  text-align: center; transition: all .17s; color: var(--txt2);
+  font-family: var(--head); letter-spacing: .06em;
+}
+.boss-btn.on-mob  { background: var(--teal-g); border-color: var(--teal);  color: #60ffcc; }
+.boss-btn.on-boss { background: var(--red-g);  border-color: var(--red);   color: #ff90a0; }
+
+/* ── SLIDER ──────────────────────────────────────── */
+.slider-wrap { display: flex; align-items: center; gap: 10px; }
+input[type="range"] {
+  flex: 1; accent-color: var(--purple);
+  cursor: pointer; height: 4px;
+}
+.slider-num {
+  font-family: var(--mono); font-size: 15px; font-weight: 600;
+  color: var(--amber); min-width: 26px; text-align: right;
+}
+
+/* ── PREVIEW BOX ─────────────────────────────────── */
+.prev-box {
+  background: var(--bg4);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-top: 10px;
+}
+.prev-head {
+  font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--txt2); font-family: var(--mono); margin-bottom: 8px;
+}
+.prev-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 14px; }
+.prev-row  { display: flex; justify-content: space-between; align-items: baseline; }
+.prev-lbl  { font-size: 10px; color: var(--txt2); }
+.prev-val  { font-family: var(--mono); font-size: 12px; font-weight: 600; color: var(--amber); }
+.prev-val.c{ color: #6ec8ff; }
+
+/* ── WEAP INFO ───────────────────────────────────── */
+.winfo {
+  background: var(--bg4); border: 1px solid var(--border);
+  border-radius: 6px; padding: 8px 10px; margin-top: 8px;
+}
+.winfo-head {
+  font-size: 9px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--txt2); font-family: var(--mono); margin-bottom: 6px;
+}
+.winfo-row { display: flex; justify-content: space-between; margin-bottom: 3px; color: var(--txt2); font-size: 11px; }
+.winfo-row span:last-child { font-family: var(--mono); color: var(--txt); }
+
+/* ── SEP ─────────────────────────────────────────── */
+.sep { height: 1px; background: var(--border); margin: 11px 0; }
+
+/* ── NOTE ────────────────────────────────────────── */
+.note {
+  font-size: 10px; color: var(--txt2);
+  padding: 5px 8px;
+  background: var(--bg4);
+  border-left: 2px solid var(--border2);
+  border-radius: 0 4px 4px 0;
+  margin-top: 5px;
+}
+
+/* ── CALC BUTTON ─────────────────────────────────── */
+.calc-btn {
+  width: 100%;
+  padding: 17px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #1c5ad4, #6828cc);
+  border: 1px solid rgba(100,160,255,.25);
+  color: #fff;
+  font-family: var(--head);
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: .14em;
+  cursor: pointer;
+  transition: all .2s;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 24px rgba(40,100,220,.35);
+  position: relative;
+  overflow: hidden;
+}
+.calc-btn::after {
+  content: '';
+  position: absolute; top: 0; left: -100%; width: 60%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.1), transparent);
+  transition: left .4s;
+}
+.calc-btn:hover { background: linear-gradient(90deg, #2a6ce0, #7838dc); box-shadow: 0 6px 32px rgba(40,100,220,.55); transform: translateY(-1px); }
+.calc-btn:hover::after { left: 140%; }
+.calc-btn:active { transform: translateY(0); }
+
+/* ── RESULTS ─────────────────────────────────────── */
+.results { display: none; }
+.results.show {
+  display: block;
+  animation: fadeUp .35s ease;
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.result-err {
+  text-align: center; color: var(--red);
+  padding: 24px; font-size: 13px; line-height: 1.8;
+}
+
+.dmg-sec { margin-bottom: 14px; }
+.dmg-sec-title {
+  font-family: var(--head); font-size: 10px; font-weight: 700;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: var(--txt2); margin-bottom: 7px;
+  padding-left: 9px; border-left: 2px solid var(--border2);
+  display: flex; align-items: center; gap: 6px;
+}
+.dmg-sec-title.c-blue   { border-color: var(--blue);   color: var(--blue);   }
+.dmg-sec-title.c-purple { border-color: var(--purple); color: #b090ff; }
+.dmg-sec-title.c-teal   { border-color: var(--teal);   color: var(--teal);   }
+.dmg-sec-title.c-amber  { border-color: var(--amber);  color: var(--amber);  }
+.dmg-sec-title.c-red    { border-color: var(--red);    color: #ff8090; }
+.dmg-sec-title.c-sky    { border-color: var(--sky);    color: var(--sky);    }
+
+.dmg-cards { display: flex; flex-wrap: wrap; gap: 7px; }
+.dmg-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 9px 13px;
+  text-align: center;
+  min-width: 74px;
+  flex: 1;
+  max-width: 130px;
+  transition: border-color .15s, background .15s;
+}
+.dmg-card:hover { border-color: var(--border2); background: #131d2e; }
+.dc-lbl { font-family: var(--mono); font-size: 11px; color: var(--txt2); margin-bottom: 5px; }
+.dc-val {
+  font-family: var(--mono); font-size: 18px; font-weight: 600;
+  color: var(--white);
+  background: linear-gradient(135deg, #f0c060, #f08030);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.dc-mult { font-family: var(--mono); font-size: 9px; color: var(--txt2); margin-top: 2px; }
+
+.ex-divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+.ex-det-head { font-family: var(--mono); font-size: 9px; letter-spacing: .12em; color: var(--txt2); margin-bottom: 8px; }
+
+.formula {
+  background: var(--bg4);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 12px 14px;
+  margin-top: 13px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--txt2);
+  line-height: 2;
+}
+.formula .fh { color: var(--amber); font-weight: 600; }
+.formula .ft { color: var(--txt3); }
+
+/* ── SKILL GRID ──────────────────────────────────── */
+.slv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.slv-field label { display: block; font-size: 10px; color: var(--txt2); margin-bottom: 3px; }
+
+/* ── STACK INFO ──────────────────────────────────── */
+.stack-info { font-family: var(--mono); font-size: 11px; color: var(--amber); margin-top: 4px; }
+
+/* ── RESPONSIVE ──────────────────────────────────── */
+@media (max-width: 960px) { .row3 { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 640px) {
+  .row3, .row2 { grid-template-columns: 1fr; }
+  .logo { font-size: 2rem; }
+  .dmg-card { min-width: 66px; }
+  .fl-2 { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="logo">NTE DAMAGE CALC</span>
+  <span class="logo-sub">v0.1 — Single Character Calculator &nbsp;|&nbsp; 一キャラ火力計算</span>
+</header>
+
+<div class="wrap">
+
+  <!-- ── ROW 1 ── -->
+  <div class="row3">
+
+    <!-- キャラクター設定 -->
+    <div class="card card-blue">
+      <div class="card-title"><span class="ico">⚔</span> キャラクター設定</div>
+
+      <span class="fl-label">キャラクター選択</span>
+      <div class="sel-grid" id="char-btns"></div>
+
+      <div class="fl">
+        <label class="fl-label">キャラクター Lv</label>
+        <input type="number" id="char-lv" value="80" min="1" max="90">
+      </div>
+
+      <div class="fl">
+        <label class="fl-label">キャラ凸（複数選択可）</label>
+        <div class="cvx-row" id="char-cvx"></div>
+        <div class="note" id="cvx-note" style="display:none">選択凸の倍率強化効果は今後実装予定</div>
+      </div>
+
+      <div class="sep"></div>
+
+      <span class="fl-label" style="margin-bottom:7px;display:block">スキルレベル（最大 12）</span>
+      <div class="slv-grid">
+        <div class="slv-field">
+          <label>通常攻撃</label>
+          <input type="number" id="slv-n" value="12" min="1" max="12">
+        </div>
+        <div class="slv-field">
+          <label>バイレールスキル</label>
+          <input type="number" id="slv-s" value="12" min="1" max="12">
+        </div>
+        <div class="slv-field">
+          <label>EXレール終結</label>
+          <input type="number" id="slv-ex" value="12" min="1" max="12">
+        </div>
+        <div class="slv-field">
+          <label>サポートスキル</label>
+          <input type="number" id="slv-sup" value="12" min="1" max="12">
+        </div>
+      </div>
+      <div class="note">※ スキルLvによる倍率変化は今後実装予定</div>
+    </div>
+
+    <!-- 武器設定 -->
+    <div class="card card-purple">
+      <div class="card-title"><span class="ico">🔫</span> 武器設定</div>
+
+      <span class="fl-label" id="wtype-label">武器種 —</span>
+      <div id="weap-btns"></div>
+      <div class="note" id="no-weap" style="display:none">対応する武器データが未登録です</div>
+
+      <div class="sep"></div>
+
+      <div class="fl">
+        <label class="fl-label">武器凸</label>
+        <div class="cvx-row" id="weap-cvx"></div>
+        <div class="note">※ 武器凸効果スケーリングは今後実装予定</div>
+      </div>
+
+      <div id="stack-sec" style="display:none">
+        <div class="sep"></div>
+        <div class="fl">
+          <label class="fl-label" id="stack-lbl">スタック数</label>
+          <div class="slider-wrap">
+            <input type="range" id="weap-stk" min="0" max="10" value="0">
+            <span class="slider-num" id="stk-num">0</span>
+          </div>
+          <div class="stack-info" id="stk-info"></div>
+        </div>
+      </div>
+
+      <div class="winfo">
+        <div class="winfo-head">◆ 武器ステータス（自動適用済）</div>
+        <div class="winfo-row"><span>基礎攻撃力</span><span id="wi-atk">—</span></div>
+        <div class="winfo-row"><span id="wi-sub-lbl">サブステ</span><span id="wi-sub">—</span></div>
+        <div class="winfo-row"><span>効果 攻撃力%</span><span id="wi-apct">—</span></div>
+      </div>
+    </div>
+
+    <!-- ステータス入力 -->
+    <div class="card card-teal">
+      <div class="card-title"><span class="ico">📊</span> ステータス入力</div>
+      <div class="note" style="margin-bottom:10px">武器・キャラ由来のステータスは自動適用済み。<br>駆動コア/ブロック・バフ等の追加分を入力してください。</div>
+
+      <div class="fl-2">
+        <div class="fl">
+          <label class="fl-label">追加 攻撃力%</label>
+          <input type="number" id="atk-pct" value="0" min="0" step="0.1">
+        </div>
+        <div class="fl">
+          <label class="fl-label">攻撃力 加算</label>
+          <input type="number" id="atk-flat" value="0" min="0">
+        </div>
+        <div class="fl">
+          <label class="fl-label">追加 クリ率%</label>
+          <input type="number" id="crit-r" value="5" min="0" max="100" step="0.1">
+        </div>
+        <div class="fl">
+          <label class="fl-label">クリダメ%</label>
+          <input type="number" id="crit-d" value="50" min="0" step="0.1">
+        </div>
+      </div>
+
+      <div class="fl">
+        <label class="fl-label">連環パワー</label>
+        <input type="number" id="chain-p" value="0" min="0">
+      </div>
+
+      <div class="fl-2">
+        <div class="fl">
+          <label class="fl-label">汎用ダメ教科%</label>
+          <input type="number" id="gen-dmg" value="0" min="0" step="0.1">
+        </div>
+        <div class="fl">
+          <label class="fl-label" id="elem-lbl">異能ダメ教科%</label>
+          <input type="number" id="elem-dmg" value="0" min="0" step="0.1">
+        </div>
+      </div>
+
+      <div class="prev-box">
+        <div class="prev-head">◆ 合計ステータス プレビュー</div>
+        <div class="prev-grid">
+          <div class="prev-row"><span class="prev-lbl">合計攻撃力</span><span class="prev-val" id="pv-atk">—</span></div>
+          <div class="prev-row"><span class="prev-lbl">クリ率</span><span class="prev-val" id="pv-cr">—</span></div>
+          <div class="prev-row"><span class="prev-lbl">クリダメ</span><span class="prev-val" id="pv-cd">—</span></div>
+          <div class="prev-row"><span class="prev-lbl">ダメバフ</span><span class="prev-val" id="pv-db">—</span></div>
+          <div class="prev-row"><span class="prev-lbl">防御補正</span><span class="prev-val c" id="pv-def">—</span></div>
+          <div class="prev-row"><span class="prev-lbl">耐性補正</span><span class="prev-val c" id="pv-res">—</span></div>
+          <div class="prev-row"><span class="prev-lbl">クリ期待値</span><span class="prev-val" id="pv-crit">—</span></div>
+          <div class="prev-row"><span class="prev-lbl">浸染補正</span><span class="prev-val c" id="pv-con">—</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /row3 -->
+
+  <!-- ── ROW 2 ── -->
+  <div class="row2">
+
+    <!-- 敵設定 -->
+    <div class="card card-red">
+      <div class="card-title"><span class="ico">🎯</span> 敵設定</div>
+      <div class="fl-2">
+        <div class="fl">
+          <label class="fl-label">敵 Lv</label>
+          <input type="number" id="enemy-lv" value="80" min="1" max="120">
+        </div>
+        <div class="fl">
+          <label class="fl-label">敵の種類</label>
+          <div class="boss-row">
+            <button class="boss-btn on-mob" id="mob-btn" onclick="setBoss(false)">雑魚</button>
+            <button class="boss-btn" id="boss-btn" onclick="setBoss(true)">ボス</button>
+          </div>
+        </div>
+        <div class="fl">
+          <label class="fl-label">基礎耐性%</label>
+          <input type="number" id="base-res" value="10" min="-100" max="200" step="0.1">
+        </div>
+        <div class="fl">
+          <label class="fl-label">耐性無視%</label>
+          <input type="number" id="res-ign" value="0" min="0" step="0.1">
+        </div>
+        <div class="fl">
+          <label class="fl-label">耐性低下%</label>
+          <input type="number" id="res-down" value="0" min="0" step="0.1">
+        </div>
+        <div class="fl">
+          <label class="fl-label">防御無視%</label>
+          <input type="number" id="def-ign" value="0" min="0" max="100" step="0.1">
+        </div>
+      </div>
+    </div>
+
+    <!-- バフ・コンディション -->
+    <div class="card card-amber">
+      <div class="card-title"><span class="ico">✨</span> バフ・コンディション</div>
+
+      <button class="tog" id="t-spirit" onclick="togBuff('spirit')">
+        <span class="tog-box" id="tc-spirit"></span>
+        精神ダメージ（防御補正 1 固定）
+      </button>
+      <button class="tog" id="t-skill" onclick="togBuff('skill')">
+        <span class="tog-box" id="tc-skill"></span>
+        <span id="skill-tog-lbl">バイレールスキルバフ（クリダメ +30%）</span>
+      </button>
+      <button class="tog" id="t-ex" onclick="togBuff('ex')">
+        <span class="tog-box" id="tc-ex"></span>
+        <span id="ex-tog-lbl">EXレール終結モード（EXボーナスヒット加算）</span>
+      </button>
+      <button class="tog" id="t-contam" onclick="togBuff('contam')">
+        <span class="tog-box" id="tc-contam"></span>
+        浸染・覆紋補正 ON
+      </button>
+
+      <div class="note" id="buff-note" style="margin-top:8px"></div>
+    </div>
+
+  </div><!-- /row2 -->
+
+  <!-- ── CALC BUTTON ── -->
+  <button class="calc-btn" onclick="calculate()">⚡ ダメージ計算実行</button>
+
+  <!-- ── RESULTS ── -->
+  <div class="card card-amber results" id="results">
+    <div class="card-title"><span class="ico">💥</span> ダメージ計算結果</div>
+    <div id="results-body"></div>
+  </div>
+
+</div><!-- /wrap -->
+
+<script>
+/* ================================================================
+   DATA
+================================================================ */
+
+const CHARS = {
+  nanari: {
+    id:'nanari', name:'ナナリ', element:'霊', wType:'プラズマ',
+    baseAtk: 396,
+    cvx: Array(6).fill('効果未設定'),
+    skills: {
+      normal:  [ {id:'N1',m:59.2}, {id:'N2',m:77.6}, {id:'N3',m:320.3}, {id:'N4',m:96.6}, {id:'N5',m:308.6} ],
+      heavy:   [ {id:'C1',m:146.5}, {id:'C2',m:215.7}, {id:'C3',m:316.8} ],
+      dodge:   [ {id:'D', m:331} ],
+      skill:   [ {id:'S', m:999.5} ],
+      ex:      [ {id:'U', m:1999.2} ],
+      exNorm:  [ {id:'UN1',m:50}, {id:'UN2',m:45}, {id:'UN3',m:165}, {id:'UN4',m:190.2}, {id:'UN5',m:209.9} ],
+      exHvy:   [ {id:'UC1',m:62.2}, {id:'UC2',m:227.1}, {id:'UC3',m:279.6} ],
+      exSkill: [ {id:'US',m:240} ],
+      exDodge: [ {id:'UD',m:171} ],
+    },
+    hasSkillBuff: true, skillBuffCD: 30,
+    hasEx: true,
+  },
+  requiem: {
+    id:'requiem', name:'レクイエム', element:'闇', wType:'液体',
+    baseAtk: null,
+    cvx: Array(6).fill('効果未設定'),
+    skills: null,
+    hasSkillBuff: false,
+    hasEx: false,
+  }
+};
+
+const WEAPS = {
+  prepare: {
+    id:'prepare', name:'プリペア', wType:'プラズマ',
+    baseAtk:570, subType:'cr', subLbl:'クリティカル率', subVal:24,
+    atkPct:15, stacks:null,
+  },
+  'last-rose': {
+    id:'last-rose', name:'ラスト・ローズ', wType:'液体',
+    baseAtk:570, subType:'cr', subLbl:'クリティカル率', subVal:24,
+    atkPct:14,
+    stacks:{ name:'暗棘', max:10, type:'cd', per:6 },
+  }
+};
+
+/* ================================================================
+   STATE
+================================================================ */
+
+const S = {
+  cId:'nanari', wId:'prepare',
+  wCvx:1, wStk:0,
+  cCvx:[],
+  cLv:80,
+  slv:{ n:12, s:12, ex:12, sup:12 },
+  atkPct:0, atkFlat:0,
+  critR:5, critD:50,
+  chainP:0,
+  genDmg:0, elemDmg:0,
+  eLv:80, isBoss:false,
+  bRes:10, rIgn:0, rDown:0, dIgn:0,
+  buf:{ spirit:false, skill:false, ex:false, contam:false },
+};
+
+/* ================================================================
+   CALCULATIONS
+================================================================ */
+
+function calcATK(cBase, wBase, pct, flat) {
+  return (cBase + wBase) * (1 + pct / 100) + flat;
+}
+
+function calcDef(pLv, eLv, boss, dIgn, spirit) {
+  if (spirit) return 1;
+  const dr = boss ? 0.8 : 0.75;
+  const a  = pLv + 100;
+  const b  = (eLv + 100) * dr * (1 - dIgn / 100);
+  return a / (a + b);
+}
+
+function calcRes(base, ign, down) {
+  // net resistance → damage multiplier = 1 - net
+  // negative net = bonus damage
+  return 1 - (base - ign - down) / 100;
+}
+
+function calcCrit(cr, cd) {
+  const r = Math.min(Math.max(cr, 0), 100) / 100;
+  return 1 + r * (cd / 100);
+}
+
+function calcContam(on, cp) {
+  if (!on) return 1;
+  return 1.2 * (1 + 0.2 * cp / (cp + 180));
+}
+
+function hit(atk, mult, dmgB, crit, def, res, con) {
+  return atk * (mult / 100) * (1 + dmgB / 100) * crit * def * res * con;
+}
+
+function getChar()  { return CHARS[S.cId]; }
+function getWeap()  {
+  const w = WEAPS[S.wId];
+  if (w && w.wType === getChar().wType) return w;
+  return Object.values(WEAPS).find(x => x.wType === getChar().wType) || null;
+}
+
+function effStats() {
+  const c = getChar(), w = getWeap();
+  if (!c || !w || !c.baseAtk) return null;
+
+  const wCR  = w.subType === 'cr' ? w.subVal : 0;
+  const wCD  = w.subType === 'cd' ? w.subVal : 0;
+  const stkCD = (w.stacks && w.stacks.type === 'cd') ? S.wStk * w.stacks.per : 0;
+
+  const tCR = wCR + S.critR;
+  let   tCD = wCD + S.critD + stkCD;
+  if (S.buf.skill && c.hasSkillBuff) tCD += c.skillBuffCD;
+
+  const atk    = calcATK(c.baseAtk, w.baseAtk, w.atkPct + S.atkPct, S.atkFlat);
+  const defM   = calcDef(S.cLv, S.eLv, S.isBoss, S.dIgn, S.buf.spirit);
+  const resM   = calcRes(S.bRes, S.rIgn, S.rDown);
+  const critM  = calcCrit(tCR, tCD);
+  const conM   = calcContam(S.buf.contam, S.chainP);
+  const dmgB   = S.genDmg + S.elemDmg;
+
+  return { atk, defM, resM, critM, conM, dmgB, tCR, tCD };
+}
+
+/* ================================================================
+   UI BUILDERS
+================================================================ */
+
+function buildCharBtns() {
+  const el = document.getElementById('char-btns');
+  el.innerHTML = '';
+  Object.values(CHARS).forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'sel-btn' + (c.id === S.cId ? ' on-blue' : '');
+    b.innerHTML = `<span class="sel-name">${c.name}</span><span class="sel-tag">${c.element} / ${c.wType}</span>`;
+    b.onclick = () => selectChar(c.id);
+    el.appendChild(b);
+  });
+}
+
+function buildWeapBtns() {
+  const c = getChar();
+  const el = document.getElementById('weap-btns');
+  const noEl = document.getElementById('no-weap');
+  document.getElementById('wtype-label').textContent = `武器種 — ${c.wType}`;
+  const avail = Object.values(WEAPS).filter(w => w.wType === c.wType);
+  el.innerHTML = '';
+  if (!avail.length) { noEl.style.display = 'block'; return; }
+  noEl.style.display = 'none';
+  avail.forEach(w => {
+    const b = document.createElement('button');
+    b.className = 'sel-btn on-full' + (w.id === S.wId ? ' on-purp' : '');
+    b.innerHTML = `<span class="sel-name">${w.name}</span><span class="sel-tag">基礎攻${w.baseAtk} / ${w.subLbl}+${w.subVal}% / 攻+${w.atkPct}%</span>`;
+    b.onclick = () => selectWeap(w.id);
+    el.appendChild(b);
+  });
+}
+
+function buildWeapCvx() {
+  const el = document.getElementById('weap-cvx');
+  el.innerHTML = '';
+  for (let i = 1; i <= 5; i++) {
+    const b = document.createElement('button');
+    b.className = 'cvx-btn' + (S.wCvx === i ? ' on' : '');
+    b.textContent = i;
+    b.onclick = () => { S.wCvx = i; buildWeapCvx(); refresh(); };
+    el.appendChild(b);
+  }
+}
+
+function buildCharCvx() {
+  const el = document.getElementById('char-cvx');
+  const c  = getChar();
+  el.innerHTML = '';
+  for (let i = 1; i <= 6; i++) {
+    const b = document.createElement('button');
+    b.className = 'cvx-btn' + (S.cCvx.includes(i) ? ' on' : '');
+    b.textContent = i;
+    b.title = c.cvx[i - 1];
+    b.onclick = () => togCvx(i);
+    el.appendChild(b);
+  }
+  document.getElementById('cvx-note').style.display = S.cCvx.length ? 'block' : 'none';
+}
+
+function updateWeapInfo() {
+  const w = getWeap();
+  if (!w) return;
+  document.getElementById('wi-atk').textContent    = w.baseAtk;
+  document.getElementById('wi-sub-lbl').textContent = w.subLbl;
+  document.getElementById('wi-sub').textContent    = `+${w.subVal}%`;
+  document.getElementById('wi-apct').textContent   = `+${w.atkPct}%`;
+
+  const ss = document.getElementById('stack-sec');
+  if (w.stacks) {
+    ss.style.display = 'block';
+    document.getElementById('stack-lbl').textContent = `${w.stacks.name} スタック数（0～${w.stacks.max}）`;
+    const sl = document.getElementById('weap-stk');
+    sl.max   = w.stacks.max;
+    sl.value = Math.min(S.wStk, w.stacks.max);
+    updateStkInfo();
+  } else {
+    ss.style.display = 'none';
+    S.wStk = 0;
+  }
+}
+
+function updateStkInfo() {
+  const w = getWeap();
+  if (!w || !w.stacks) return;
+  const bonus = S.wStk * w.stacks.per;
+  document.getElementById('stk-num').textContent  = S.wStk;
+  document.getElementById('stk-info').textContent =
+    w.stacks.type === 'cd' ? `クリティカルダメージ +${bonus}%` : '';
+}
+
+function updateElemLbl() {
+  document.getElementById('elem-lbl').textContent = `${getChar().element}異能ダメ教科%`;
+}
+
+function updateBufBtns() {
+  const c = getChar();
+  const tSk = document.getElementById('t-skill');
+  const tEx = document.getElementById('t-ex');
+  tSk.disabled = !c.hasSkillBuff;
+  tEx.disabled = !c.hasEx;
+  if (!c.hasSkillBuff) S.buf.skill = false;
+  if (!c.hasEx)        S.buf.ex    = false;
+
+  ['spirit','skill','ex','contam'].forEach(k => {
+    document.getElementById(`t-${k}`)?.classList.toggle('on', !!S.buf[k]);
+    const tc = document.getElementById(`tc-${k}`);
+    if (tc) tc.textContent = S.buf[k] ? '✓' : '';
+  });
+}
+
+function updatePreview() {
+  const eff = effStats();
+  const ids = ['pv-atk','pv-cr','pv-cd','pv-db','pv-def','pv-res','pv-crit','pv-con'];
+  if (!eff) { ids.forEach(id => document.getElementById(id).textContent = '—'); return; }
+  const f = (v, d=2) => isNaN(v) ? '—' : v.toFixed(d);
+  document.getElementById('pv-atk').textContent  = Math.round(eff.atk).toLocaleString('ja-JP');
+  document.getElementById('pv-cr').textContent   = f(eff.tCR, 1) + '%';
+  document.getElementById('pv-cd').textContent   = f(eff.tCD, 1) + '%';
+  document.getElementById('pv-db').textContent   = '+' + f(eff.dmgB, 1) + '%';
+  document.getElementById('pv-def').textContent  = f(eff.defM * 100) + '%';
+  document.getElementById('pv-res').textContent  = f(eff.resM * 100) + '%';
+  document.getElementById('pv-crit').textContent = '×' + f(eff.critM, 4);
+  document.getElementById('pv-con').textContent  = '×' + f(eff.conM, 4);
+}
+
+/* ================================================================
+   INTERACTIONS
+================================================================ */
+
+function selectChar(id) {
+  S.cId  = id;
+  S.cCvx = [];
+  S.buf.skill = false;
+  S.buf.ex    = false;
+  const c = CHARS[id];
+  const fw = Object.values(WEAPS).find(w => w.wType === c.wType);
+  if (fw) S.wId = fw.id;
+  S.wStk = 0;
+  rebuildAll();
+}
+
+function selectWeap(id) {
+  S.wId  = id;
+  S.wStk = 0;
+  buildWeapBtns();
+  updateWeapInfo();
+  refresh();
+}
+
+function togCvx(n) {
+  const i = S.cCvx.indexOf(n);
+  if (i >= 0) S.cCvx.splice(i, 1); else S.cCvx.push(n);
+  buildCharCvx();
+  refresh();
+}
+
+function setBoss(v) {
+  S.isBoss = v;
+  document.getElementById('mob-btn').className  = 'boss-btn' + (!v ? ' on-mob'  : '');
+  document.getElementById('boss-btn').className = 'boss-btn' + ( v ? ' on-boss' : '');
+  refresh();
+}
+
+function togBuff(k) {
+  const c = getChar();
+  if (k === 'skill' && !c.hasSkillBuff) return;
+  if (k === 'ex'    && !c.hasEx)        return;
+  S.buf[k] = !S.buf[k];
+  updateBufBtns();
+  refresh();
+}
+
+function refresh()     { updatePreview(); }
+function rebuildAll()  {
+  buildCharBtns(); buildWeapBtns(); buildWeapCvx(); buildCharCvx();
+  updateWeapInfo(); updateElemLbl(); updateBufBtns(); updatePreview();
+}
+
+/* ================================================================
+   CALCULATE
+================================================================ */
+
+function calculate() {
+  const c   = getChar();
+  const eff = effStats();
+  const rEl = document.getElementById('results');
+  const bEl = document.getElementById('results-body');
+  rEl.classList.add('show');
+  rEl.scrollIntoView({ behavior:'smooth', block:'start' });
+
+  if (!c.skills || !c.baseAtk || !eff) {
+    bEl.innerHTML = `<div class="result-err">⚠️ キャラクターデータが未設定です。<br><small style="color:var(--txt2)">レクイエムのスキルデータは後日追加予定です。</small></div>`;
+    return;
+  }
+
+  const { atk, defM, resM, critM, conM, dmgB } = eff;
+  const H  = m => Math.round(hit(atk, m, dmgB, critM, defM, resM, conM));
+  const RH = m => hit(atk, m, dmgB, critM, defM, resM, conM);
+  const sk = c.skills;
+
+  const normal = sk.normal.map(x => ({ id:x.id, m:x.m, dmg:H(x.m) }));
+  const heavy  = sk.heavy.map( x => ({ id:x.id, m:x.m, dmg:H(x.m) }));
+  const dodge  = sk.dodge.map( x => ({ id:x.id, m:x.m, dmg:H(x.m) }));
+  const skill  = sk.skill.map( x => ({ id:x.id, m:x.m, dmg:H(x.m) }));
+  const ex     = sk.ex.map(    x => ({ id:x.id, m:x.m, dmg:H(x.m) }));
+
+  let exHTML = '';
+  let showNorm  = normal, showHvy = heavy, showDodge = dodge, showSkill = skill;
+
+  if (S.buf.ex && c.hasEx) {
+    const exN = sk.exNorm.map( x => ({ id:x.id, m:x.m, dmg:H(x.m) }));
+    const exH = sk.exHvy.map(  x => ({ id:x.id, m:x.m, dmg:H(x.m) }));
+    const exS = sk.exSkill.map(x => ({ id:x.id, m:x.m, dmg:H(x.m) }));
+    const exD = sk.exDodge.map(x => ({ id:x.id, m:x.m, dmg:H(x.m) }));
+
+    // Combined hits
+    showNorm  = sk.normal.map((x,i) => ({ id:`cn${i}`, lbl:`N${i+1}+UN${i+1}`, m:+(x.m+sk.exNorm[i].m).toFixed(1),  dmg:Math.round(RH(x.m)+RH(sk.exNorm[i].m)) }));
+    showHvy   = sk.heavy.map( (x,i) => ({ id:`ch${i}`, lbl:`C${i+1}+UC${i+1}`, m:+(x.m+sk.exHvy[i].m).toFixed(1),  dmg:Math.round(RH(x.m)+RH(sk.exHvy[i].m)) }));
+    showSkill = [{ id:'cs', lbl:'S+US', m:+(sk.skill[0].m+sk.exSkill[0].m).toFixed(1), dmg:Math.round(RH(sk.skill[0].m)+RH(sk.exSkill[0].m)) }];
+    showDodge = [{ id:'cd', lbl:'D+UD', m:+(sk.dodge[0].m+sk.exDodge[0].m).toFixed(1), dmg:Math.round(RH(sk.dodge[0].m)+RH(sk.exDodge[0].m)) }];
+
+    exHTML = `
+      <hr class="ex-divider">
+      <div class="ex-det-head">▶ EX ボーナスヒット（個別ダメージ）</div>
+      ${dmgSec('EX通常 (UN)', exN, 'c-sky')}
+      ${dmgSec('EX重撃 (UC)', exH, 'c-purple')}
+      ${dmgSec('EXスキル (US)', exS, 'c-amber')}
+      ${dmgSec('EX回避 (UD)', exD, 'c-teal')}
+    `;
+  }
+
+  const exTag  = (S.buf.ex && c.hasEx) ? '（EXボーナス込み合計）' : '';
+  const html = `
+    ${dmgSec('通常攻撃 ' + exTag, showNorm,  'c-blue'  )}
+    ${dmgSec('重撃 '     + exTag, showHvy,   'c-purple' )}
+    ${dmgSec('回避反撃 ' + exTag, showDodge, 'c-teal'   )}
+    ${dmgSec('バイレールスキル ' + exTag, showSkill, 'c-amber' )}
+    ${dmgSec('EXレール終結', ex, 'c-red')}
+    ${exHTML}
+    ${formulaBox(eff)}
+  `;
+  bEl.innerHTML = html;
+}
+
+function card(it) {
+  const lbl = it.lbl || it.id;
+  const mStr = it.m + '%';
+  return `<div class="dmg-card">
+    <div class="dc-lbl">${lbl}</div>
+    <div class="dc-val">${it.dmg.toLocaleString('ja-JP')}</div>
+    <div class="dc-mult">×${mStr}</div>
+  </div>`;
+}
+
+function dmgSec(title, items, cls) {
+  return `<div class="dmg-sec">
+    <div class="dmg-sec-title ${cls}">${title}</div>
+    <div class="dmg-cards">${items.map(card).join('')}</div>
+  </div>`;
+}
+
+function formulaBox(eff) {
+  const n = (v, d=4) => v.toFixed(d);
+  return `<div class="formula">
+    <span class="ft">補正係数内訳 :</span><br>
+    攻撃力            <span class="fh">${Math.round(eff.atk).toLocaleString('ja-JP')}</span><br>
+    クリ補正          <span class="fh">×${n(eff.critM)}</span>
+      <span class="ft">（クリ率 ${n(eff.tCR,1)}% × クリダメ ${n(eff.tCD,1)}%）</span><br>
+    防御補正          <span class="fh">×${n(eff.defM)}</span>
+      <span class="ft">（${S.buf.spirit ? '精神ダメ 固定' : `自Lv${S.cLv} / 敵Lv${S.eLv} / ${S.isBoss?'ボス防御率0.8':'雑魚防御率0.75'}`}）</span><br>
+    耐性補正          <span class="fh">×${n(eff.resM)}</span>
+      <span class="ft">（基礎耐性${S.bRes}% − 無視${S.rIgn}% − 低下${S.rDown}%）</span><br>
+    ダメバフ補正      <span class="fh">×${n(1 + eff.dmgB/100)}</span>
+      <span class="ft">（汎用${S.genDmg}% ＋ 異能${S.elemDmg}%）</span><br>
+    浸染・覆紋補正    <span class="fh">×${n(eff.conM)}</span>
+      <span class="ft">（${S.buf.contam ? `連環パワー ${S.chainP}` : '非適用'}）</span>
+  </div>`;
+}
+
+/* ================================================================
+   EVENTS
+================================================================ */
+
+const bind = (id, fn) => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', e => { fn(e.target.value); refresh(); });
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  rebuildAll();
+
+  bind('atk-pct',  v => S.atkPct  = parseFloat(v)  || 0);
+  bind('atk-flat', v => S.atkFlat = parseFloat(v)  || 0);
+  bind('crit-r',   v => S.critR   = parseFloat(v)  || 0);
+  bind('crit-d',   v => S.critD   = parseFloat(v)  || 0);
+  bind('chain-p',  v => S.chainP  = parseFloat(v)  || 0);
+  bind('gen-dmg',  v => S.genDmg  = parseFloat(v)  || 0);
+  bind('elem-dmg', v => S.elemDmg = parseFloat(v)  || 0);
+  bind('char-lv',  v => S.cLv     = Math.max(1, parseInt(v) || 80));
+  bind('enemy-lv', v => S.eLv     = Math.max(1, parseInt(v) || 80));
+  bind('base-res', v => S.bRes    = parseFloat(v)  || 0);
+  bind('res-ign',  v => S.rIgn    = Math.max(0, parseFloat(v) || 0));
+  bind('res-down', v => S.rDown   = Math.max(0, parseFloat(v) || 0));
+  bind('def-ign',  v => S.dIgn    = Math.min(100, Math.max(0, parseFloat(v) || 0)));
+
+  // Skill levels (stored but scaling pending)
+  ['n','s','ex','sup'].forEach((k, i) => {
+    const ids = ['slv-n','slv-s','slv-ex','slv-sup'];
+    bind(ids[i], v => S.slv[k] = Math.min(12, Math.max(1, parseInt(v) || 12)));
+  });
+
+  // Stack slider
+  document.getElementById('weap-stk').addEventListener('input', e => {
+    S.wStk = parseInt(e.target.value) || 0;
+    updateStkInfo();
+    refresh();
+  });
+});
+</script>
+
+</body>
+</html>
