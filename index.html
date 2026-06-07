@@ -1009,9 +1009,3 @@ document.addEventListener('DOMContentLoaded',()=>{
 </script>
 </body>
 </html>'''
-
-with open('/mnt/user-data/outputs/nte_damage_calc.html','w',encoding='utf-8') as f:
-    f.write(html)
-print('Done. Lines:', html.count('\n'))
-PYEOF
-python3 /tmp/build_nte.py
