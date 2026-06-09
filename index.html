@@ -1,1008 +1,1310 @@
 
-html = r'''<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>NTE ダメージ計算機</title>
+<title>NTE Damage Calculator</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,400;0,600;0,700;0,800;1,600&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* ── TOKENS ──────────────────────────── */
+/* ─── DESIGN TOKENS ───────────────────────────────────────────── */
 :root{
-  --bg:#050710;--bg2:#0b1020;--bg3:#10182a;--bg4:#080d1a;
-  --bdr:#18243e;--bdr2:#1f2f50;
-  --blue:#3a8fff;--blue-g:rgba(58,143,255,.14);--blue-d:rgba(58,143,255,.07);
-  --purple:#9955f5;--purple-g:rgba(153,85,245,.14);
-  --teal:#0ec98a;--teal-g:rgba(14,201,138,.13);
-  --red:#f04060;--red-g:rgba(240,64,96,.13);
-  --amber:#f0a020;--amber-g:rgba(240,160,32,.13);
-  --sky:#38c8f0;--sky-g:rgba(56,200,240,.13);
-  --pink:#f070c0;--pink-g:rgba(240,112,192,.13);
-  --txt:#bdd0ee;--txt2:#48607e;--txt3:#7d98be;--white:#e6f0ff;
-  --mono:'JetBrains Mono',monospace;--head:'Exo 2','Noto Sans JP',sans-serif;--body:'Noto Sans JP',sans-serif;
-  --r:8px;--rs:5px;
-  /* slot colours */
-  --s0:#3a8fff; --s0g:rgba(58,143,255,.16);  --s0t:rgba(58,143,255,.07);
-  --s1:#c060f0; --s1g:rgba(192,96,240,.16);  --s1t:rgba(192,96,240,.07);
-  --s2:#0ec98a; --s2g:rgba(14,201,138,.16);  --s2t:rgba(14,201,138,.07);
-  --s3:#f0a020; --s3g:rgba(240,160,32,.16);  --s3t:rgba(240,160,32,.07);
+  /* backgrounds */
+  --bg0:#040609; --bg1:#080c18; --bg2:#0d1325; --bg3:#111b30; --bg4:#0a1020;
+  /* borders */
+  --b1:#172035; --b2:#1e2e4a; --b3:#2a3f62;
+  /* brand colours */
+  --blue:#3d94ff; --blue-g:rgba(61,148,255,.13); --blue-d:rgba(61,148,255,.06);
+  --pur:#9966f5; --pur-g:rgba(153,102,245,.13);
+  --teal:#0ed49a; --teal-g:rgba(14,212,154,.12);
+  --red:#f04563;  --red-g:rgba(240,69,99,.12);
+  --amb:#f0a820; --amb-g:rgba(240,168,32,.12);
+  --sky:#2dcaee; --sky-g:rgba(45,202,238,.12);
+  --pink:#f072c8; --pink-g:rgba(240,114,200,.12);
+  --grn:#48e870;
+  /* text */
+  --t1:#c5d8f5; --t2:#46617f; --t3:#7b9ab8; --t4:#e4f0ff;
+  /* slot colours (char 0-3) */
+  --s0:#3d94ff; --s0g:rgba(61,148,255,.15); --s0t:rgba(61,148,255,.06);
+  --s1:#b055f0; --s1g:rgba(176,85,240,.15); --s1t:rgba(176,85,240,.06);
+  --s2:#0ed49a; --s2g:rgba(14,212,154,.15); --s2t:rgba(14,212,154,.06);
+  --s3:#f0a820; --s3g:rgba(240,168,32,.15); --s3t:rgba(240,168,32,.06);
+  /* type */
+  --fn:'Noto Sans JP',sans-serif; --fh:'Exo 2','Noto Sans JP',sans-serif; --fm:'JetBrains Mono',monospace;
+  /* misc */
+  --r:9px; --rs:5px; --tr:.18s;
 }
+
+/* ─── RESET & BASE ────────────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--txt);font-family:var(--body);font-size:13px;min-height:100vh;line-height:1.56;
-  background-image:radial-gradient(ellipse 100% 60% at 50% -10%,rgba(58,143,255,.06),transparent),
-    repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.013) 40px),
-    repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.013) 40px);}
+body{
+  background:var(--bg0);color:var(--t1);font-family:var(--fn);font-size:13px;
+  line-height:1.6;min-height:100vh;
+  background-image:
+    radial-gradient(ellipse 90% 55% at 50% -5%,rgba(61,148,255,.06),transparent),
+    repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(255,255,255,.012) 40px),
+    repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(255,255,255,.012) 40px);
+}
 
-/* HEADER */
-header{text-align:center;padding:26px 20px 14px;border-bottom:1px solid var(--bdr);position:relative;overflow:hidden}
-header::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,transparent 5%,var(--blue) 30%,var(--purple) 70%,transparent 95%)}
-.logo{font-family:var(--head);font-size:2.2rem;font-weight:800;letter-spacing:.14em;
-  background:linear-gradient(135deg,#5ab0ff 0%,#d080ff 55%,#60e0ff 100%);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:inline-block}
-.logo-sub{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.2em;color:var(--txt2);margin-top:3px;text-transform:uppercase}
+/* ─── SCROLLBAR ───────────────────────────────────────────────── */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg1)}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
 
-/* MAIN TABS */
-.main-tabs{display:flex;justify-content:center;border-bottom:2px solid var(--bdr);background:var(--bg2)}
-.main-tab{padding:12px 40px;font-family:var(--head);font-size:13px;font-weight:700;letter-spacing:.1em;
-  background:transparent;border:none;cursor:pointer;color:var(--txt2);text-transform:uppercase;
-  border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s;white-space:nowrap}
-.main-tab:hover{color:var(--txt)}
-.main-tab.active{color:var(--white);border-bottom-color:var(--blue);background:rgba(58,143,255,.06)}
-.tab-page{display:none}
-.tab-page.show{display:block}
+/* ─── HEADER ──────────────────────────────────────────────────── */
+header{
+  text-align:center;padding:28px 20px 16px;
+  border-bottom:1px solid var(--b1);position:relative;overflow:hidden;
+  background:linear-gradient(180deg,rgba(61,148,255,.04) 0%,transparent 100%);
+}
+header::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent 5%,var(--blue) 30%,var(--pur) 70%,transparent 95%);
+}
+.logo{
+  font-family:var(--fh);font-size:2.2rem;font-weight:800;letter-spacing:.16em;
+  background:linear-gradient(130deg,#5bb5ff 0%,#d080ff 55%,#5fdfff 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.logo-sub{
+  display:block;font-family:var(--fm);font-size:10px;letter-spacing:.22em;
+  color:var(--t2);margin-top:4px;text-transform:uppercase;
+}
 
-/* LAYOUT */
-.wrap{max-width:1280px;margin:0 auto;padding:16px 14px 48px}
-.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+/* ─── MAIN TABS ───────────────────────────────────────────────── */
+.tab-nav{display:flex;justify-content:center;background:var(--bg1);border-bottom:2px solid var(--b1)}
+.tab-btn{
+  padding:11px 40px;font-family:var(--fh);font-size:13px;font-weight:700;
+  letter-spacing:.1em;background:transparent;border:none;cursor:pointer;
+  color:var(--t2);text-transform:uppercase;border-bottom:2px solid transparent;
+  margin-bottom:-2px;transition:all var(--tr);white-space:nowrap;
+}
+.tab-btn:hover{color:var(--t1)}
+.tab-btn.on{color:var(--t4);border-bottom-color:var(--blue);background:rgba(61,148,255,.05)}
+.tab-page{display:none}.tab-page.show{display:block;animation:fadein .28s ease}
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
-/* CARDS */
-.card{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r);padding:14px;position:relative}
-.card-blue  {border-left:3px solid var(--blue)}
-.card-purple{border-left:3px solid var(--purple)}
-.card-teal  {border-left:3px solid var(--teal)}
-.card-red   {border-left:3px solid var(--red)}
-.card-amber {border-left:3px solid var(--amber)}
-.card-sky   {border-left:3px solid var(--sky)}
-.card-pink  {border-left:3px solid var(--pink)}
-.card-title{font-family:var(--head);font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;
-  color:var(--txt3);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+/* ─── LAYOUT ──────────────────────────────────────────────────── */
+.wrap{max-width:1300px;margin:0 auto;padding:18px 16px 52px}
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-bottom:13px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:13px}
 
-/* FORM */
+/* ─── CARD ────────────────────────────────────────────────────── */
+.card{
+  background:var(--bg1);border:1px solid var(--b1);border-radius:var(--r);
+  padding:15px;position:relative;
+  box-shadow:0 2px 12px rgba(0,0,0,.3);
+}
+.card.bl{border-left:3px solid var(--blue)}
+.card.pu{border-left:3px solid var(--pur)}
+.card.tl{border-left:3px solid var(--teal)}
+.card.rd{border-left:3px solid var(--red)}
+.card.am{border-left:3px solid var(--amb)}
+.card.sk{border-left:3px solid var(--sky)}
+.card.pk{border-left:3px solid var(--pink)}
+.ct{
+  font-family:var(--fh);font-size:11px;font-weight:700;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--t3);margin-bottom:13px;display:flex;align-items:center;gap:7px;
+}
+
+/* ─── FORM FIELDS ─────────────────────────────────────────────── */
 .fl{margin-bottom:8px}
-.fl-label{display:block;font-size:10px;letter-spacing:.08em;color:var(--txt2);margin-bottom:3px}
-.fl-2{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-input[type="number"]{width:100%;background:var(--bg3);border:1px solid var(--bdr2);border-radius:var(--rs);
-  color:var(--white);font-family:var(--mono);font-size:13px;padding:6px 9px;outline:none;
-  transition:border-color .18s,box-shadow .18s;-moz-appearance:textfield}
-input[type="number"]::-webkit-outer-spin-button,input[type="number"]::-webkit-inner-spin-button{-webkit-appearance:none}
-input[type="number"]:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(58,143,255,.18)}
+.fl-l{display:block;font-size:10px;letter-spacing:.08em;color:var(--t2);margin-bottom:3px}
+.g2f{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+input[type="number"]{
+  width:100%;background:var(--bg3);border:1px solid var(--b2);border-radius:var(--rs);
+  color:var(--t4);font-family:var(--fm);font-size:13px;padding:6px 9px;
+  outline:none;transition:border-color var(--tr),box-shadow var(--tr);
+  -moz-appearance:textfield;
+}
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button{-webkit-appearance:none}
+input[type="number"]:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(61,148,255,.18)}
 
-/* DROPDOWNS */
-.sel-wrap{position:relative;margin-bottom:7px}
-.sel-wrap::after{content:'▾';position:absolute;right:9px;top:50%;transform:translateY(-50%);
-  font-size:10px;color:var(--txt2);pointer-events:none}
-select{width:100%;background:var(--bg3);border:1px solid var(--bdr2);border-radius:var(--rs);
-  color:var(--white);font-family:var(--body);font-size:13px;padding:7px 28px 7px 9px;
-  -webkit-appearance:none;appearance:none;outline:none;cursor:pointer;transition:border-color .18s}
-select:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(58,143,255,.18)}
-select option{background:#10182a}
-.sel-chip{display:flex;gap:5px;align-items:center;padding:5px 8px;background:var(--bg4);border:1px solid var(--bdr);
-  border-radius:var(--rs);margin-bottom:7px;font-size:10px;flex-wrap:wrap}
-.chip-tag{color:var(--txt2)}.chip-val{color:var(--txt);font-weight:600;font-family:var(--mono)}
+/* ─── SELECT ──────────────────────────────────────────────────── */
+.sw{position:relative;margin-bottom:7px}
+.sw::after{content:'▾';position:absolute;right:9px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--t2);pointer-events:none}
+select{
+  width:100%;background:var(--bg3);border:1px solid var(--b2);border-radius:var(--rs);
+  color:var(--t4);font-family:var(--fn);font-size:13px;padding:7px 28px 7px 9px;
+  -webkit-appearance:none;appearance:none;outline:none;cursor:pointer;transition:border-color var(--tr);
+}
+select:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(61,148,255,.18)}
+select option{background:var(--bg3)}
 
-/* CONVEX */
-.cvx-row{display:flex;gap:4px;flex-wrap:wrap}
-.cvx-btn{width:31px;height:31px;border-radius:5px;background:var(--bg3);border:1px solid var(--bdr2);
-  color:var(--txt2);font-family:var(--head);font-size:13px;font-weight:700;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;transition:all .15s}
-.cvx-btn:hover{border-color:var(--bdr);color:var(--txt)}
-.cvx-btn.on{background:rgba(153,85,245,.22);border-color:var(--purple);color:#c898ff;box-shadow:0 0 7px rgba(153,85,245,.3)}
+/* ─── CHIP & BADGE ────────────────────────────────────────────── */
+.chip{
+  display:flex;gap:5px;align-items:center;flex-wrap:wrap;
+  padding:5px 8px;background:var(--bg4);border:1px solid var(--b1);
+  border-radius:var(--rs);margin-bottom:7px;font-size:10px;
+}
+.chl{color:var(--t2)}.chv{color:var(--t1);font-weight:600;font-family:var(--fm)}
 
-/* SKILL LV SLIDERS */
-.slv-item{margin-bottom:7px}
-.slv-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px}
-.slv-name{font-size:10px;color:var(--txt2)}
-.slv-tag{font-family:var(--mono);font-size:11px}
-.slv-tag .lv{color:var(--amber);font-weight:600}
-.slv-tag .mx{color:var(--txt2)}
-input[type="range"].slv-range{width:100%;accent-color:var(--blue);cursor:pointer;height:4px}
+/* ─── CONVEX BUTTONS ──────────────────────────────────────────── */
+.cvr{display:flex;gap:4px;flex-wrap:wrap}
+.cvb{
+  width:31px;height:31px;border-radius:5px;background:var(--bg3);
+  border:1px solid var(--b2);color:var(--t2);font-family:var(--fh);
+  font-size:13px;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.cvb:hover{border-color:var(--b3);color:var(--t1)}
+.cvb.on{background:rgba(153,102,245,.22);border-color:var(--pur);color:#c8a0ff;box-shadow:0 0 8px rgba(153,102,245,.3)}
 
-/* TOGGLES */
-.tog{width:100%;display:flex;align-items:center;gap:8px;padding:6px 9px;border-radius:var(--rs);
-  background:var(--bg3);border:1px solid transparent;cursor:pointer;color:var(--txt2);
-  font-family:var(--body);font-size:12px;text-align:left;transition:all .17s;margin-bottom:5px}
-.tog:hover:not(:disabled){background:#121f34;color:var(--txt)}
-.tog.on{background:var(--blue-g);border-color:var(--blue);color:#90c8ff}
+/* ─── SKILL LEVEL SLIDERS ─────────────────────────────────────── */
+.slvi{margin-bottom:7px}
+.slvh{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px}
+.slvn{font-size:10px;color:var(--t2)}
+.slvt{font-family:var(--fm);font-size:11px}
+.slvt .lv{color:var(--amb);font-weight:600}
+.slvt .mx{color:var(--t2)}
+input[type="range"].slvr{width:100%;accent-color:var(--blue);cursor:pointer;height:4px;margin:0}
+input[type="range"].sld{flex:1;accent-color:var(--pur);cursor:pointer;height:4px}
+
+/* ─── TOGGLE BUTTONS ──────────────────────────────────────────── */
+.tog{
+  width:100%;display:flex;align-items:center;gap:8px;
+  padding:7px 9px;border-radius:var(--rs);background:var(--bg3);
+  border:1px solid transparent;cursor:pointer;color:var(--t2);
+  font-family:var(--fn);font-size:12px;text-align:left;
+  transition:all var(--tr);margin-bottom:5px;
+}
+.tog:hover:not(:disabled){background:#131f36;color:var(--t1)}
+.tog.on{background:var(--blue-g);border-color:var(--blue);color:#92ccff}
 .tog:disabled{opacity:.3;cursor:not-allowed}
-.tog-box{width:14px;height:14px;border-radius:3px;border:1px solid var(--bdr2);background:var(--bg);
-  display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;transition:all .17s}
-.tog.on .tog-box{background:var(--blue);border-color:var(--blue);color:#fff}
+.togb{
+  width:14px;height:14px;border-radius:3px;border:1px solid var(--b2);
+  background:var(--bg0);display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:700;flex-shrink:0;transition:all var(--tr);
+}
+.tog.on .togb{background:var(--blue);border-color:var(--blue);color:#fff}
 
-/* BOSS TOGGLE */
-.boss-row{display:flex;gap:5px}
-.boss-btn{flex:1;padding:6px;border-radius:var(--rs);background:var(--bg3);border:1px solid var(--bdr2);
-  cursor:pointer;font-size:12px;font-weight:600;text-align:center;transition:all .17s;color:var(--txt2);font-family:var(--head)}
-.boss-btn.on-mob {background:var(--teal-g);border-color:var(--teal);color:#60ffcc}
-.boss-btn.on-boss{background:var(--red-g); border-color:var(--red); color:#ff90a0}
+/* ─── BOSS TOGGLE ─────────────────────────────────────────────── */
+.brow{display:flex;gap:5px}
+.bbtn{
+  flex:1;padding:6px;border-radius:var(--rs);background:var(--bg3);border:1px solid var(--b2);
+  cursor:pointer;font-size:12px;font-weight:600;text-align:center;color:var(--t2);
+  font-family:var(--fh);transition:all var(--tr);
+}
+.bbtn.mob{background:var(--teal-g);border-color:var(--teal);color:#60ffcc}
+.bbtn.bos{background:var(--red-g); border-color:var(--red); color:#ffa0b0}
 
-/* STACK SLIDER */
-.sld-wrap{display:flex;align-items:center;gap:9px}
-input[type="range"].sld{flex:1;accent-color:var(--purple);cursor:pointer;height:4px}
-.sld-num{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--amber);min-width:22px;text-align:right}
+/* ─── STACK SLIDER ────────────────────────────────────────────── */
+.sldw{display:flex;align-items:center;gap:9px}
+.sldv{font-family:var(--fm);font-size:14px;font-weight:600;color:var(--amb);min-width:22px;text-align:right}
 
-/* PREVIEW */
-.prev-box{background:var(--bg4);border:1px solid var(--bdr);border-radius:6px;padding:9px 11px;margin-top:9px}
-.prev-head{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--txt2);font-family:var(--mono);margin-bottom:7px}
-.prev-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px}
-.prev-row{display:flex;justify-content:space-between;align-items:baseline}
-.prev-lbl{font-size:10px;color:var(--txt2)}
-.prev-val{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--amber)}
-.prev-val.c{color:#6ec8ff}
+/* ─── PREVIEW PANEL ───────────────────────────────────────────── */
+.prev{background:var(--bg4);border:1px solid var(--b1);border-radius:6px;padding:9px 12px;margin-top:9px}
+.prevh{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--t2);font-family:var(--fm);margin-bottom:7px}
+.prevg{display:grid;grid-template-columns:1fr 1fr;gap:2px 12px}
+.prevr{display:flex;justify-content:space-between;align-items:baseline}
+.prevl{font-size:10px;color:var(--t2)}
+.prevv{font-family:var(--fm);font-size:12px;font-weight:600;color:var(--amb)}
+.prevv.c{color:#6ec8ff}
 
-/* WEAPON INFO */
-.winfo{background:var(--bg4);border:1px solid var(--bdr);border-radius:5px;padding:7px 9px;margin-top:7px}
-.winfo-head{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--txt2);font-family:var(--mono);margin-bottom:5px}
-.winfo-row{display:flex;justify-content:space-between;margin-bottom:2px;color:var(--txt2);font-size:10px}
-.winfo-row span:last-child{font-family:var(--mono);color:var(--txt)}
+/* ─── WEAPON INFO ─────────────────────────────────────────────── */
+.winfo{background:var(--bg4);border:1px solid var(--b1);border-radius:5px;padding:7px 9px;margin-top:7px}
+.winfoh{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--t2);font-family:var(--fm);margin-bottom:5px}
+.winfor{display:flex;justify-content:space-between;margin-bottom:2px;font-size:10px;color:var(--t2)}
+.winfor span:last-child{font-family:var(--fm);color:var(--t1)}
 
-.sep{height:1px;background:var(--bdr);margin:10px 0}
-.note{font-size:10px;color:var(--txt2);padding:4px 7px;background:var(--bg4);border-left:2px solid var(--bdr2);border-radius:0 4px 4px 0;margin-top:5px}
+/* ─── DRIVE BLOCK INFO ────────────────────────────────────────── */
+.dbinfo{font-size:10px;color:var(--teal);font-family:var(--fm);padding:3px 7px;
+  background:var(--bg4);border-left:2px solid var(--teal);border-radius:0 4px 4px 0;margin-top:4px}
 
-/* CALC BUTTON */
-.calc-btn{width:100%;padding:16px;border-radius:10px;background:linear-gradient(90deg,#1c5ad4,#6828cc);
-  border:1px solid rgba(100,160,255,.25);color:#fff;font-family:var(--head);font-size:18px;font-weight:800;
-  letter-spacing:.14em;cursor:pointer;transition:all .2s;margin-bottom:14px;box-shadow:0 4px 22px rgba(40,100,220,.35);
-  position:relative;overflow:hidden}
-.calc-btn::after{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.1),transparent);transition:left .4s}
-.calc-btn:hover{background:linear-gradient(90deg,#2a6ce0,#7838dc);transform:translateY(-1px);box-shadow:0 6px 30px rgba(40,100,220,.55)}
-.calc-btn:hover::after{left:140%}
-.calc-btn:active{transform:translateY(0)}
+.sep{height:1px;background:var(--b1);margin:10px 0}
+.note{font-size:10px;color:var(--t2);padding:4px 7px;background:var(--bg4);border-left:2px solid var(--b2);border-radius:0 4px 4px 0;margin-top:5px}
 
-/* SINGLE RESULTS */
-.results{display:none}.results.show{display:block;animation:fadeUp .3s ease}
-@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.result-err{text-align:center;color:var(--red);padding:20px;font-size:13px;line-height:1.9}
-.dmg-sec{margin-bottom:12px}
-.dmg-sec-title{font-family:var(--head);font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
-  color:var(--txt2);margin-bottom:6px;padding-left:8px;border-left:2px solid var(--bdr2)}
-.dmg-sec-title.c-blue  {border-color:var(--blue);  color:var(--blue)}
-.dmg-sec-title.c-purple{border-color:var(--purple);color:#c898ff}
-.dmg-sec-title.c-teal  {border-color:var(--teal);  color:var(--teal)}
-.dmg-sec-title.c-amber {border-color:var(--amber); color:var(--amber)}
-.dmg-sec-title.c-red   {border-color:var(--red);   color:#ff8090}
-.dmg-sec-title.c-sky   {border-color:var(--sky);   color:var(--sky)}
-.dmg-sec-title.c-pink  {border-color:var(--pink);  color:var(--pink)}
-.dmg-cards{display:flex;flex-wrap:wrap;gap:6px}
-.dmg-card{background:var(--bg3);border:1px solid var(--bdr);border-radius:7px;padding:8px 12px;text-align:center;min-width:70px;flex:1;max-width:120px}
-.dc-lbl{font-family:var(--mono);font-size:11px;color:var(--txt2);margin-bottom:4px}
-.dc-val{font-family:var(--mono);font-size:17px;font-weight:600;background:linear-gradient(135deg,#f0c060,#f08030);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.dc-mult{font-family:var(--mono);font-size:9px;color:var(--txt2);margin-top:1px}
-.ex-divider{border:none;border-top:1px solid var(--bdr);margin:12px 0}
-.formula{background:var(--bg4);border:1px solid var(--bdr);border-radius:7px;padding:11px 13px;margin-top:12px;
-  font-family:var(--mono);font-size:11px;color:var(--txt2);line-height:2}
-.formula .fh{color:var(--amber);font-weight:600}
-.formula .ft{color:var(--txt3)}
+/* ─── CALC BUTTON ─────────────────────────────────────────────── */
+.calcbtn{
+  width:100%;padding:16px;border-radius:10px;
+  background:linear-gradient(90deg,#1a58d0,#6525c8);
+  border:1px solid rgba(100,160,255,.22);color:#fff;font-family:var(--fh);
+  font-size:18px;font-weight:800;letter-spacing:.14em;cursor:pointer;
+  transition:all .2s;margin-bottom:14px;
+  box-shadow:0 4px 22px rgba(40,100,220,.32);position:relative;overflow:hidden;
+}
+.calcbtn::after{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.09),transparent);transition:left .45s}
+.calcbtn:hover{background:linear-gradient(90deg,#2868e0,#7230d8);transform:translateY(-1px);box-shadow:0 7px 28px rgba(40,100,220,.5)}
+.calcbtn:hover::after{left:150%}
+.calcbtn:active{transform:translateY(0)}
 
-/* ── PARTY TAB ─────────────────────────── */
-/* Shared enemy row */
-.ps-row{display:grid;grid-template-columns:repeat(7,1fr) auto;gap:7px;align-items:end;margin-bottom:14px}
-@media(max-width:900px){.ps-row{grid-template-columns:repeat(4,1fr) auto}}
+/* ─── RESULTS (SINGLE TAB) ────────────────────────────────────── */
+.res{display:none}
+.res.show{display:block;animation:fadein .3s ease}
+.rerr{text-align:center;color:var(--red);padding:22px;font-size:13px;line-height:1.9}
+.dsec{margin-bottom:13px}
+.dsect{
+  font-family:var(--fh);font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--t2);margin-bottom:6px;padding-left:8px;border-left:2px solid var(--b2);
+}
+.dsect.bl{border-color:var(--blue);color:var(--blue)}
+.dsect.pu{border-color:var(--pur);color:#c898ff}
+.dsect.tl{border-color:var(--teal);color:var(--teal)}
+.dsect.am{border-color:var(--amb);color:var(--amb)}
+.dsect.rd{border-color:var(--red);color:#ff8090}
+.dsect.sk{border-color:var(--sky);color:var(--sky)}
+.dsect.pk{border-color:var(--pink);color:var(--pink)}
+.dcards{display:flex;flex-wrap:wrap;gap:6px}
+.dcard{background:var(--bg3);border:1px solid var(--b1);border-radius:7px;padding:8px 12px;text-align:center;min-width:68px;flex:1;max-width:115px}
+.dcard:hover{border-color:var(--b2)}
+.dcl{font-family:var(--fm);font-size:11px;color:var(--t2);margin-bottom:4px}
+.dcv{font-family:var(--fm);font-size:17px;font-weight:600;
+  background:linear-gradient(135deg,#f0c258,#f07828);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.dcm{font-family:var(--fm);font-size:9px;color:var(--t2);margin-top:1px}
+.formula{
+  background:var(--bg4);border:1px solid var(--b1);border-radius:7px;
+  padding:11px 13px;margin-top:13px;font-family:var(--fm);font-size:11px;color:var(--t2);line-height:2;
+}
+.formula .fh{color:var(--amb);font-weight:600}
+.formula .ft{color:var(--t3)}
+.ex-div{border:none;border-top:1px solid var(--b1);margin:12px 0}
 
-/* Party 2-col area */
-.party-area{display:grid;grid-template-columns:370px 1fr;gap:14px;margin-bottom:14px;align-items:start}
-@media(max-width:1100px){.party-area{grid-template-columns:320px 1fr}}
+/* ─── PARTY TAB ───────────────────────────────────────────────── */
+/* shared enemy */
+.psgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;align-items:end;margin-bottom:13px}
+@media(max-width:960px){.psgrid{grid-template-columns:repeat(4,1fr)}}
+
+/* party layout */
+.party-area{display:grid;grid-template-columns:360px 1fr;gap:13px;margin-bottom:13px}
+@media(max-width:1100px){.party-area{grid-template-columns:310px 1fr}}
 @media(max-width:800px){.party-area{grid-template-columns:1fr}}
 
-/* Slot tabs */
-.slot-tabs{display:flex;gap:5px;margin-bottom:0}
-.slot-tab{flex:1;padding:8px 5px;border-radius:7px 7px 0 0;background:var(--bg3);border:1px solid var(--bdr2);
-  border-bottom:none;cursor:pointer;font-family:var(--head);font-size:11px;font-weight:700;
-  color:var(--txt2);text-align:center;transition:all .18s;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.slot-tab:hover{background:#131f36;color:var(--txt)}
-.slot-tab.active{background:var(--bg2);border-color:var(--blue);color:var(--white)}
-/* Per-slot active color */
-.slot-tab.si0.active{border-color:var(--s0);background:var(--s0t)}
-.slot-tab.si1.active{border-color:var(--s1);background:var(--s1t)}
-.slot-tab.si2.active{border-color:var(--s2);background:var(--s2t)}
-.slot-tab.si3.active{border-color:var(--s3);background:var(--s3t)}
+/* slot tabs */
+.stabs{display:flex;gap:5px}
+.stab{
+  flex:1;padding:8px 5px;border-radius:7px 7px 0 0;
+  background:var(--bg3);border:1px solid var(--b2);border-bottom:none;
+  cursor:pointer;font-family:var(--fh);font-size:11px;font-weight:700;
+  color:var(--t2);text-align:center;transition:all var(--tr);
+  letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.stab:hover{background:#131f36;color:var(--t1)}
+.stab.on{background:var(--bg1);border-color:var(--blue);color:var(--t4)}
+.stab.si0.on{border-color:var(--s0);background:var(--s0t)}
+.stab.si1.on{border-color:var(--s1);background:var(--s1t)}
+.stab.si2.on{border-color:var(--s2);background:var(--s2t)}
+.stab.si3.on{border-color:var(--s3);background:var(--s3t)}
 
-/* Slot panel (left side) */
-.slot-panel{background:var(--bg2);border:1px solid var(--blue);border-top:none;border-radius:0 0 var(--r) var(--r);padding:12px}
+/* slot panel */
+.spanel{
+  background:var(--bg1);border:1px solid var(--blue);border-top:none;
+  border-radius:0 0 var(--r) var(--r);padding:13px;
+}
 
-/* Config accordion */
-.config-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;
-  padding:7px 9px;border-radius:var(--rs);background:var(--bg3);border:1px solid var(--bdr2);
-  cursor:pointer;color:var(--txt3);font-size:11px;transition:all .2s;margin-bottom:8px}
-.config-toggle:hover{background:#131f36;color:var(--txt)}
-.config-toggle .ct-info{display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex:1}
-.config-toggle .ct-name{font-family:var(--head);font-size:13px;font-weight:700;color:var(--white)}
-.config-badge{font-family:var(--mono);font-size:10px;color:var(--txt2);background:var(--bg4);
-  border:1px solid var(--bdr);border-radius:3px;padding:1px 5px}
-.config-arrow{font-size:11px;color:var(--txt2);transition:transform .2s;flex-shrink:0}
-.config-arrow.open{transform:rotate(180deg)}
-.config-body{display:none;padding-top:4px}
-.config-body.open{display:block}
+/* config accordion */
+.cfg-tog{
+  width:100%;display:flex;align-items:center;justify-content:space-between;
+  padding:7px 10px;border-radius:var(--rs);background:var(--bg3);border:1px solid var(--b2);
+  cursor:pointer;color:var(--t3);font-size:11px;transition:all .2s;margin-bottom:8px;
+}
+.cfg-tog:hover{background:#131f36;color:var(--t1)}
+.cfg-info{display:flex;gap:7px;flex-wrap:wrap;align-items:center;flex:1;min-width:0}
+.cfg-name{font-family:var(--fh);font-size:13px;font-weight:700;color:var(--t4)}
+.cfg-badge{
+  font-family:var(--fm);font-size:10px;color:var(--t2);
+  background:var(--bg4);border:1px solid var(--b1);border-radius:3px;padding:1px 5px;
+}
+.cfg-arr{font-size:11px;color:var(--t2);transition:transform .2s;flex-shrink:0}
+.cfg-arr.open{transform:rotate(180deg)}
+.cfg-body{display:none;padding-top:4px}
+.cfg-body.open{display:block}
 
-/* Available attacks */
-.avail-head{font-family:var(--head);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
-  color:var(--txt2);margin-bottom:7px;display:flex;justify-content:space-between;align-items:center}
-.avail-scroll{max-height:300px;overflow-y:auto;padding-right:3px}
-.avail-scroll::-webkit-scrollbar{width:3px}
-.avail-scroll::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:2px}
-.avail-cat-label{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--txt2);
-  font-family:var(--mono);padding:3px 0 3px 4px;margin-top:6px;border-bottom:1px solid var(--bdr)}
-.avail-btn{width:100%;display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:6px;
-  padding:6px 8px;border-radius:var(--rs);background:var(--bg3);border:1px solid var(--bdr2);
-  cursor:pointer;margin-bottom:3px;transition:all .15s;color:var(--txt);border-left:3px solid}
-.avail-btn:hover{transform:translateX(2px)}
-.avail-btn.c-blue  {border-left-color:var(--blue)}.avail-btn:hover.c-blue  {background:var(--blue-d)}
-.avail-btn.c-purple{border-left-color:var(--purple)}.avail-btn:hover.c-purple{background:rgba(153,85,245,.07)}
-.avail-btn.c-teal  {border-left-color:var(--teal)}.avail-btn:hover.c-teal  {background:rgba(14,201,138,.07)}
-.avail-btn.c-amber {border-left-color:var(--amber)}.avail-btn:hover.c-amber {background:rgba(240,160,32,.07)}
-.avail-btn.c-red   {border-left-color:var(--red)}.avail-btn:hover.c-red   {background:rgba(240,64,96,.07)}
-.avail-btn.c-sky   {border-left-color:var(--sky)}.avail-btn:hover.c-sky   {background:rgba(56,200,240,.07)}
-.avail-btn.c-pink  {border-left-color:var(--pink)}.avail-btn:hover.c-pink  {background:rgba(240,112,192,.07)}
-.avail-id{font-family:var(--mono);font-size:12px;font-weight:600}
-.avail-note{font-size:10px;color:var(--txt2);text-overflow:ellipsis;overflow:hidden;white-space:nowrap}
-.avail-mult{font-family:var(--mono);font-size:11px;color:var(--txt3)}
-.avail-add{font-size:15px;color:var(--txt2);font-weight:700}
+/* available attacks */
+.avail-head{font-family:var(--fh);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--t2);margin-bottom:7px;display:flex;justify-content:space-between;align-items:center}
+.avail-scroll{max-height:290px;overflow-y:auto;padding-right:2px}
+.avail-cat{
+  font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--t2);
+  font-family:var(--fm);padding:3px 0 3px 4px;margin-top:6px;border-bottom:1px solid var(--b1);
+}
+.abtn{
+  width:100%;display:grid;grid-template-columns:auto 1fr auto auto auto;align-items:center;gap:6px;
+  padding:6px 8px;border-radius:var(--rs);background:var(--bg3);border:1px solid var(--b2);
+  cursor:pointer;margin-bottom:3px;transition:all .15s;color:var(--t1);border-left:3px solid;
+}
+.abtn:hover{transform:translateX(2px)}
+.abtn.bl{border-left-color:var(--blue)}.abtn:hover.bl{background:var(--blue-d)}
+.abtn.pu{border-left-color:var(--pur)}.abtn:hover.pu{background:var(--pur-g)}
+.abtn.tl{border-left-color:var(--teal)}.abtn:hover.tl{background:var(--teal-g)}
+.abtn.am{border-left-color:var(--amb)}.abtn:hover.am{background:var(--amb-g)}
+.abtn.rd{border-left-color:var(--red)}.abtn:hover.rd{background:var(--red-g)}
+.abtn.sk{border-left-color:var(--sky)}.abtn:hover.sk{background:var(--sky-g)}
+.abtn.pk{border-left-color:var(--pink)}.abtn:hover.pk{background:var(--pink-g)}
+.aid{font-family:var(--fm);font-size:12px;font-weight:600}
+.anote{font-size:10px;color:var(--t2);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.atime{font-family:var(--fm);font-size:10px;color:var(--sky);text-align:right;min-width:28px}
+.amult{font-family:var(--fm);font-size:11px;color:var(--t3)}
+.aadd{font-size:15px;color:var(--t2);font-weight:700}
+.no-data{text-align:center;color:var(--t2);padding:24px;font-size:12px}
 
-/* ── ROTATION LIST ───────────────────── */
-.rot-panel{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r);display:flex;flex-direction:column;min-height:400px}
-.rot-header{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;
-  border-bottom:1px solid var(--bdr);background:var(--bg3);border-radius:var(--r) var(--r) 0 0}
-.rot-header-title{font-family:var(--head);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--txt3)}
-.rot-header-info{font-family:var(--mono);font-size:11px;color:var(--sky)}
-.clear-btn{background:var(--red-g);border:1px solid rgba(240,64,96,.3);border-radius:4px;cursor:pointer;
-  color:#ff9090;font-size:11px;padding:4px 9px;transition:all .15s;font-family:var(--body)}
-.clear-btn:hover{background:rgba(240,64,96,.25)}
+/* rotation panel */
+.rot-panel{
+  background:var(--bg1);border:1px solid var(--b1);border-radius:var(--r);
+  display:flex;flex-direction:column;min-height:420px;
+}
+.rot-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-bottom:1px solid var(--b1);
+  background:var(--bg3);border-radius:var(--r) var(--r) 0 0;flex-wrap:wrap;gap:8px;
+}
+.rot-title{font-family:var(--fh);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--t3)}
+.rot-info{font-family:var(--fm);font-size:11px;color:var(--sky)}
+.clearbtn{
+  background:var(--red-g);border:1px solid rgba(240,69,99,.3);border-radius:4px;
+  cursor:pointer;color:#ffaaaa;font-size:11px;padding:4px 10px;transition:all .15s;font-family:var(--fn);
+}
+.clearbtn:hover{background:rgba(240,69,99,.22)}
 
-.rot-scroll{flex:1;overflow-y:auto;padding:8px 10px;min-height:200px}
-.rot-scroll::-webkit-scrollbar{width:4px}
-.rot-scroll::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:2px}
+.rot-scroll{flex:1;overflow-y:auto;padding:8px 10px}
+.rot-empty{text-align:center;color:var(--t2);padding:36px 16px;font-size:12px;line-height:2}
 
-/* Rotation entry */
-.rot-entry{display:grid;grid-template-columns:24px auto 1fr auto auto auto 28px;
-  align-items:center;gap:6px;padding:5px 7px;border-radius:6px;
-  background:var(--bg3);border:1px solid var(--bdr);margin-bottom:4px;
-  transition:background .15s;border-left:3px solid}
-.rot-entry:hover{background:#111d30}
-.re-num{font-family:var(--mono);font-size:10px;color:var(--txt2);text-align:center}
-/* char chip inside entry */
-.re-char{font-family:var(--head);font-size:10px;font-weight:700;padding:2px 6px;border-radius:3px;white-space:nowrap}
-.re-lbl{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--white)}
-/* damage + pct bar */
-.re-dmg-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:2px;min-width:80px}
-.re-dmg{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--amber);text-align:right}
-.re-pct-row{display:flex;align-items:center;gap:4px;width:100%;justify-content:flex-end}
-.re-bar-wrap{width:48px;height:4px;background:var(--bdr);border-radius:2px;overflow:hidden;flex-shrink:0}
-.re-bar{height:100%;border-radius:2px;width:0%;transition:width .4s ease}
-.re-pct{font-family:var(--mono);font-size:9px;color:var(--txt2);min-width:30px;text-align:right}
-.re-mult{font-family:var(--mono);font-size:10px;color:var(--txt2)}
-.re-rm{background:none;border:none;cursor:pointer;color:var(--txt2);font-size:11px;padding:2px 4px;border-radius:3px;transition:all .15s}
-.re-rm:hover{color:var(--red);background:var(--red-g)}
+/* rotation entry */
+.rentry{
+  display:grid;grid-template-columns:22px auto 1fr auto 74px auto 36px 24px;
+  align-items:center;gap:5px;padding:5px 7px;border-radius:6px;
+  background:var(--bg3);border:1px solid var(--b1);margin-bottom:4px;
+  transition:background .15s;border-left:3px solid;
+}
+.rentry:hover{background:#121d30}
+.rentry.si0{border-left-color:var(--s0)}.rentry.si1{border-left-color:var(--s1)}
+.rentry.si2{border-left-color:var(--s2)}.rentry.si3{border-left-color:var(--s3)}
+.rnum{font-family:var(--fm);font-size:10px;color:var(--t2);text-align:center}
+.rchar{font-family:var(--fh);font-size:10px;font-weight:700;padding:2px 6px;border-radius:3px;white-space:nowrap}
+.rentry.si0 .rchar{background:var(--s0g);color:var(--s0);border:1px solid rgba(61,148,255,.22)}
+.rentry.si1 .rchar{background:var(--s1g);color:var(--s1);border:1px solid rgba(176,85,240,.22)}
+.rentry.si2 .rchar{background:var(--s2g);color:var(--s2);border:1px solid rgba(14,212,154,.22)}
+.rentry.si3 .rchar{background:var(--s3g);color:var(--s3);border:1px solid rgba(240,168,32,.22)}
+.rlbl{font-family:var(--fm);font-size:12px;font-weight:600;color:var(--t4)}
+.rmult{font-family:var(--fm);font-size:10px;color:var(--t2)}
 
-/* Slot color system for entries */
-.si0 .re-char,.rot-entry.si0 .re-char{background:var(--s0g);color:var(--s0);border:1px solid rgba(58,143,255,.25)}
-.si1 .re-char,.rot-entry.si1 .re-char{background:var(--s1g);color:var(--s1);border:1px solid rgba(192,96,240,.25)}
-.si2 .re-char,.rot-entry.si2 .re-char{background:var(--s2g);color:var(--s2);border:1px solid rgba(14,201,138,.25)}
-.si3 .re-char,.rot-entry.si3 .re-char{background:var(--s3g);color:var(--s3);border:1px solid rgba(240,160,32,.25)}
-.rot-entry.si0{border-left-color:var(--s0)}
-.rot-entry.si1{border-left-color:var(--s1)}
-.rot-entry.si2{border-left-color:var(--s2)}
-.rot-entry.si3{border-left-color:var(--s3)}
-.rot-entry.si0 .re-bar{background:var(--s0)}
-.rot-entry.si1 .re-bar{background:var(--s1)}
-.rot-entry.si2 .re-bar{background:var(--s2)}
-.rot-entry.si3 .re-bar{background:var(--s3)}
+/* time/QS cell */
+.rtc{display:flex;flex-direction:column;align-items:center;gap:2px}
+.rtv{font-family:var(--fm);font-size:11px;color:var(--sky)}
+.rtv.qs{color:var(--teal);font-weight:700}
+.rtv.inst{font-size:10px;color:var(--t2)}
+.rqsl{display:flex;align-items:center;gap:2px;cursor:pointer;font-size:9px;color:var(--t3);user-select:none}
+.rqsc{width:11px;height:11px;cursor:pointer;accent-color:var(--teal);flex-shrink:0}
+.rnoqs{font-size:9px;color:var(--t2);opacity:.4}
 
-.rot-empty{text-align:center;color:var(--txt2);padding:32px 16px;font-size:12px;line-height:2}
+/* damage/% cell */
+.rdmgw{display:flex;flex-direction:column;align-items:flex-end;gap:2px;min-width:80px}
+.rdmg{font-family:var(--fm);font-size:12px;font-weight:600;color:var(--amb)}
+.rpctrow{display:flex;align-items:center;gap:4px;justify-content:flex-end}
+.rbarw{width:48px;height:4px;background:var(--b1);border-radius:2px;overflow:hidden;flex-shrink:0}
+.rbar{height:100%;border-radius:2px;width:0%;transition:width .4s ease}
+.rentry.si0 .rbar{background:var(--s0)}.rentry.si1 .rbar{background:var(--s1)}
+.rentry.si2 .rbar{background:var(--s2)}.rentry.si3 .rbar{background:var(--s3)}
+.rpct{font-family:var(--fm);font-size:9px;color:var(--t2);min-width:30px;text-align:right}
 
-/* Rotation footer */
-.rot-footer{padding:10px 14px;border-top:1px solid var(--bdr);background:var(--bg3);
-  border-radius:0 0 var(--r) var(--r);display:flex;justify-content:space-between;align-items:center}
-.rot-total-lbl{font-size:10px;color:var(--txt2)}
-.rot-total{font-family:var(--mono);font-size:16px;font-weight:700;
-  background:linear-gradient(135deg,#f0c060,#f08030);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+/* reorder */
+.rreord{display:flex;flex-direction:column;gap:1px}
+.rup,.rdn{background:none;border:none;cursor:pointer;color:var(--t2);font-size:9px;line-height:1.2;padding:1px 4px;border-radius:2px;transition:color .15s;width:100%}
+.rup:hover,.rdn:hover{color:var(--t4);background:var(--blue-d)}
+.rup:disabled,.rdn:disabled{opacity:.22;cursor:not-allowed}
+.rrm{background:none;border:none;cursor:pointer;color:var(--t2);font-size:11px;padding:2px 4px;border-radius:3px;transition:all .15s}
+.rrm:hover{color:var(--red);background:var(--red-g)}
 
-/* PARTY RESULTS */
-.party-results-body{}
-.party-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
-@media(max-width:700px){.party-summary{grid-template-columns:1fr 1fr}}
-.psr-card{background:var(--bg3);border:1px solid var(--bdr);border-radius:7px;padding:12px;text-align:center}
-.psr-card.active{border-color:var(--blue)}
-.psr-card.si0{border-left:3px solid var(--s0)}.psr-card.si1{border-left:3px solid var(--s1)}
-.psr-card.si2{border-left:3px solid var(--s2)}.psr-card.si3{border-left:3px solid var(--s3)}
-.psr-name{font-family:var(--head);font-size:12px;font-weight:700;color:var(--txt3);margin-bottom:3px}
-.psr-val{font-family:var(--mono);font-size:18px;font-weight:700;background:linear-gradient(135deg,#f0c060,#f08030);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.psr-pct{font-size:11px;color:var(--txt2);margin-top:2px;font-family:var(--mono)}
-.psr-bar-wrap{height:4px;background:var(--bdr);border-radius:2px;margin-top:6px;overflow:hidden}
-.psr-bar{height:100%;border-radius:2px;transition:width .5s ease}
-.si0 .psr-bar{background:var(--s0)}.si1 .psr-bar{background:var(--s1)}
-.si2 .psr-bar{background:var(--s2)}.si3 .psr-bar{background:var(--s3)}
-.party-grand{text-align:center;padding-top:12px;border-top:1px solid var(--bdr)}
-.pgt-lbl{font-family:var(--head);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--txt2);margin-bottom:5px}
-.pgt-val{font-family:var(--mono);font-size:26px;font-weight:700;background:linear-gradient(135deg,#80d0ff,#c090ff);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+/* rotation footer */
+.rot-ftr{
+  padding:10px 14px;border-top:1px solid var(--b1);background:var(--bg3);
+  border-radius:0 0 var(--r) var(--r);display:flex;justify-content:space-between;
+  align-items:center;gap:10px;flex-wrap:wrap;
+}
+.rot-stat{display:flex;flex-direction:column;align-items:center}
+.rot-stat-l{font-size:9px;color:var(--t2);letter-spacing:.08em;text-transform:uppercase;font-family:var(--fh)}
+.rot-stat-v{font-family:var(--fm);font-weight:700}
+.rot-stat-v.dmg{font-size:15px;background:linear-gradient(135deg,#f0c258,#f07828);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.rot-stat-v.dps{font-size:15px;color:var(--sky)}
+.rot-stat-v.time{font-size:13px;color:var(--t3)}
 
-@media(max-width:960px){.row3{grid-template-columns:1fr 1fr}}
-@media(max-width:640px){.row3,.row2{grid-template-columns:1fr}.logo{font-size:1.8rem}.main-tab{padding:10px 20px;font-size:11px}}
+/* party results */
+.pdps-row{display:flex;gap:10px;margin-bottom:14px}
+.pdps-card{
+  flex:1;text-align:center;background:var(--bg3);border:1px solid var(--b1);
+  border-radius:8px;padding:10px 14px;transition:border-color .2s;
+}
+.pdps-card.sk{border-color:rgba(45,202,238,.35);background:rgba(45,202,238,.06)}
+.pdps-card.am{border-color:rgba(240,168,32,.3);background:rgba(240,168,32,.06)}
+.pdps-lbl{font-family:var(--fh);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--t2);margin-bottom:5px}
+.pdps-v{font-family:var(--fm);font-size:20px;font-weight:700;color:var(--t4)}
+.pdps-card.sk .pdps-v{color:var(--sky)}
+.pdps-card.am .pdps-v{background:linear-gradient(135deg,#f0c258,#f07828);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.psum{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+@media(max-width:700px){.psum{grid-template-columns:1fr 1fr}}
+.pcard{background:var(--bg3);border:1px solid var(--b1);border-radius:7px;padding:12px;text-align:center}
+.pcard.act{border-color:var(--blue)}
+.pcard.si0{border-left:3px solid var(--s0)}.pcard.si1{border-left:3px solid var(--s1)}
+.pcard.si2{border-left:3px solid var(--s2)}.pcard.si3{border-left:3px solid var(--s3)}
+.pcn{font-family:var(--fh);font-size:12px;font-weight:700;color:var(--t3);margin-bottom:3px}
+.pcv{font-family:var(--fm);font-size:17px;font-weight:700;background:linear-gradient(135deg,#f0c258,#f07828);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.pcp{font-size:10px;color:var(--t2);margin-top:2px;font-family:var(--fm)}
+.pcbw{height:4px;background:var(--b1);border-radius:2px;margin-top:7px;overflow:hidden}
+.pcb{height:100%;border-radius:2px;transition:width .5s ease}
+.pcard.si0 .pcb{background:var(--s0)}.pcard.si1 .pcb{background:var(--s1)}
+.pcard.si2 .pcb{background:var(--s2)}.pcard.si3 .pcb{background:var(--s3)}
+.pgrand{text-align:center;padding-top:12px;border-top:1px solid var(--b1)}
+.pgl{font-family:var(--fh);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--t2);margin-bottom:5px}
+.pgv{font-family:var(--fm);font-size:26px;font-weight:700;background:linear-gradient(135deg,#80d0ff,#c090ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+
+/* ─── RESPONSIVE ──────────────────────────────────────────────── */
+@media(max-width:960px){.g3{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){
+  .g3,.g2{grid-template-columns:1fr}
+  .logo{font-size:1.8rem}
+  .tab-btn{padding:10px 18px;font-size:11px}
+  .rentry{grid-template-columns:20px auto 1fr auto 62px auto 30px 22px;font-size:11px}
+}
 </style>
 </head>
 <body>
 
 <header>
   <span class="logo">NTE DAMAGE CALC</span>
-  <span class="logo-sub">v0.4 &nbsp;|&nbsp; Single &amp; Rotation Calculator</span>
+  <span class="logo-sub">v1.0 &nbsp;|&nbsp; Single &amp; Rotation DPS Calculator</span>
 </header>
 
-<nav class="main-tabs">
-  <button id="main-tab-single" class="main-tab active" onclick="switchMainTab('single')">⚔ 単体ダメージ計算</button>
-  <button id="main-tab-party"  class="main-tab"        onclick="switchMainTab('party')">🔄 ローテダメージ計算</button>
+<nav class="tab-nav">
+  <button class="tab-btn on" id="tn-single" onclick="switchTab('single')">⚔ 単体ダメージ計算</button>
+  <button class="tab-btn"    id="tn-party"  onclick="switchTab('party')">🔄 ローテDPS計算</button>
 </nav>
 
-<!-- ===== SINGLE TAB ===== -->
+<!-- ═══════════════════════════════════════════════════
+     SINGLE TAB
+═══════════════════════════════════════════════════ -->
 <div id="tab-single" class="tab-page show">
 <div class="wrap">
-<div class="row3">
-  <div class="card card-blue">
-    <div class="card-title">⚔ キャラクター設定</div>
-    <div class="fl"><label class="fl-label">キャラクター</label>
-      <div class="sel-wrap"><select id="char-sel" onchange="onCharChange(this.value)"></select></div>
-      <div class="sel-chip"><span class="chip-tag">異能</span><span class="chip-val" id="chip-elem">—</span>
-        <span class="chip-tag">武器種</span><span class="chip-val" id="chip-wtype">—</span>
-        <span class="chip-tag">基礎攻</span><span class="chip-val" id="chip-atk">—</span></div></div>
-    <div class="fl"><label class="fl-label">キャラクター Lv</label><input type="number" id="char-lv" value="80" min="1" max="90"></div>
-    <div class="fl"><label class="fl-label">キャラ凸</label><div class="cvx-row" id="char-cvx"></div>
-      <div class="note" id="cvx-note" style="display:none">凸倍率強化は今後実装予定</div></div>
+
+<div class="g3">
+  <!-- キャラクター設定 -->
+  <div class="card bl">
+    <div class="ct">⚔ キャラクター設定</div>
+    <div class="fl"><label class="fl-l">キャラクター選択</label>
+      <div class="sw"><select id="s-char" onchange="sOnChar(this.value)"></select></div>
+      <div class="chip"><span class="chl">異能</span><span class="chv" id="s-elem">—</span><span class="chl">武器種</span><span class="chv" id="s-wtype">—</span><span class="chl">基礎攻</span><span class="chv" id="s-batk">—</span></div>
+    </div>
+    <div class="fl"><label class="fl-l">キャラLv</label><input type="number" id="s-lv" value="80" min="1" max="90" oninput="sS.cLv=+this.value||80;sRefresh()"></div>
+    <div class="fl"><label class="fl-l">キャラ凸（複数選択可）</label>
+      <div class="cvr" id="s-cvx"></div>
+      <div class="note" id="s-cvx-note" style="display:none">凸倍率強化は今後実装予定</div>
+    </div>
     <div class="sep"></div>
     <div style="display:flex;justify-content:space-between;margin-bottom:7px">
-      <span class="fl-label" style="margin:0">スキルレベル</span>
-      <span style="font-family:var(--mono);font-size:10px;color:var(--txt2)">最大Lv <span id="slv-max-disp" style="color:var(--amber);font-weight:700">10</span></span>
+      <span class="fl-l" style="margin:0">スキルレベル</span>
+      <span style="font-family:var(--fm);font-size:10px;color:var(--t2)">最大Lv <span id="s-slvmax" style="color:var(--amb);font-weight:700">10</span></span>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-      <div class="slv-item"><div class="slv-head"><span class="slv-name">通常 (N/C/D)</span><span class="slv-tag">Lv<span class="lv" id="slvv-n">10</span>/<span id="slvm-n">10</span></span></div><input type="range" class="slv-range" id="slv-n" min="1" max="10" value="10" oninput="onSlvChange('n',this.value)"></div>
-      <div class="slv-item"><div class="slv-head"><span class="slv-name">バイレール (S)</span><span class="slv-tag">Lv<span class="lv" id="slvv-s">10</span>/<span id="slvm-s">10</span></span></div><input type="range" class="slv-range" id="slv-s" min="1" max="10" value="10" oninput="onSlvChange('s',this.value)"></div>
-      <div class="slv-item"><div class="slv-head"><span class="slv-name">EXレール (U系)</span><span class="slv-tag">Lv<span class="lv" id="slvv-ex">10</span>/<span id="slvm-ex">10</span></span></div><input type="range" class="slv-range" id="slv-ex" min="1" max="10" value="10" oninput="onSlvChange('ex',this.value)"></div>
-      <div class="slv-item"><div class="slv-head"><span class="slv-name">サポート (SS)</span><span class="slv-tag">Lv<span class="lv" id="slvv-sup">10</span>/<span id="slvm-sup">10</span></span></div><input type="range" class="slv-range" id="slv-sup" min="1" max="10" value="10" oninput="onSlvChange('sup',this.value)"></div>
+    <div class="g2f">
+      <div class="slvi"><div class="slvh"><span class="slvn">通常 (N/C/D)</span><span class="slvt">Lv<span class="lv" id="s-slvv-n">10</span>/<span id="s-slvm-n">10</span></span></div><input type="range" class="slvr" id="s-slv-n" min="1" max="10" value="10" oninput="sOnSlv('n',this.value)"></div>
+      <div class="slvi"><div class="slvh"><span class="slvn">バイレール (S)</span><span class="slvt">Lv<span class="lv" id="s-slvv-s">10</span>/<span id="s-slvm-s">10</span></span></div><input type="range" class="slvr" id="s-slv-s" min="1" max="10" value="10" oninput="sOnSlv('s',this.value)"></div>
+      <div class="slvi"><div class="slvh"><span class="slvn">EXレール (U系)</span><span class="slvt">Lv<span class="lv" id="s-slvv-ex">10</span>/<span id="s-slvm-ex">10</span></span></div><input type="range" class="slvr" id="s-slv-ex" min="1" max="10" value="10" oninput="sOnSlv('ex',this.value)"></div>
+      <div class="slvi"><div class="slvh"><span class="slvn">サポート (SS)</span><span class="slvt">Lv<span class="lv" id="s-slvv-sup">10</span>/<span id="s-slvm-sup">10</span></span></div><input type="range" class="slvr" id="s-slv-sup" min="1" max="10" value="10" oninput="sOnSlv('sup',this.value)"></div>
     </div>
-    <div class="note">※ スキルLv倍率スケーリングは今後実装予定</div>
+    <div class="note">※ スキルLvの倍率スケーリングは今後実装予定</div>
   </div>
-  <div class="card card-purple">
-    <div class="card-title">🔫 武器設定</div>
-    <div class="fl"><label class="fl-label" id="wtype-label">武器選択</label>
-      <div class="sel-wrap"><select id="weap-sel" onchange="onWeapChange(this.value)"></select></div>
-      <div class="sel-chip"><span class="chip-tag">基礎攻</span><span class="chip-val" id="chip-watk">—</span>
-        <span class="chip-tag">サブ</span><span class="chip-val" id="chip-wsub">—</span></div></div>
-    <div class="fl"><label class="fl-label">武器凸</label><div class="cvx-row" id="weap-cvx"></div>
-      <div class="note">※ 武器凸スケーリングは今後実装予定</div></div>
-    <div id="stack-sec" style="display:none">
+
+  <!-- 武器 + 駆動ブロック -->
+  <div class="card pu">
+    <div class="ct">🔫 武器 / 駆動ブロック</div>
+    <div class="fl"><label class="fl-l" id="s-wlbl">武器選択</label>
+      <div class="sw"><select id="s-weap" onchange="sOnWeap(this.value)"></select></div>
+      <div class="chip"><span class="chl">基礎攻</span><span class="chv" id="s-watk">—</span><span class="chl">サブ</span><span class="chv" id="s-wsub">—</span></div>
+    </div>
+    <div class="fl"><label class="fl-l">武器凸</label><div class="cvr" id="s-wcvx"></div><div class="note">※ 武器凸スケーリングは今後実装予定</div></div>
+    <div id="s-stkwrap" style="display:none">
       <div class="sep"></div>
-      <div class="fl"><label class="fl-label" id="stack-lbl">スタック数</label>
-        <div class="sld-wrap"><input type="range" class="sld" id="weap-stk" min="0" max="10" value="0" oninput="onStkChange(this.value)"><span class="sld-num" id="stk-num">0</span></div>
-        <div style="font-family:var(--mono);font-size:11px;color:var(--amber);margin-top:3px" id="stk-info"></div></div>
+      <div class="fl"><label class="fl-l" id="s-stklbl">スタック数</label>
+        <div class="sldw"><input type="range" class="sld" id="s-stk" min="0" max="10" value="0" oninput="sOnStk(this.value)"><span class="sldv" id="s-stkn">0</span></div>
+        <div style="font-family:var(--fm);font-size:11px;color:var(--amb);margin-top:3px" id="s-stkfx"></div>
+      </div>
     </div>
-    <div class="winfo"><div class="winfo-head">◆ 武器ステータス（自動適用）</div>
-      <div class="winfo-row"><span>基礎攻撃力</span><span id="wi-atk">—</span></div>
-      <div class="winfo-row"><span id="wi-sub-lbl">サブステ</span><span id="wi-sub">—</span></div>
-      <div class="winfo-row"><span>効果 攻撃力%</span><span id="wi-apct">—</span></div>
+    <div class="winfo"><div class="winfoh">◆ 武器ステータス（自動適用）</div>
+      <div class="winfor"><span>基礎攻撃力</span><span id="wi-atk">—</span></div>
+      <div class="winfor"><span id="wi-subl">サブステ</span><span id="wi-sub">—</span></div>
+      <div class="winfor"><span>効果 攻撃力%</span><span id="wi-apct">—</span></div>
+    </div>
+    <div class="sep"></div>
+    <div class="fl"><label class="fl-l">駆動ブロック</label>
+      <div class="sw"><select id="s-db" onchange="sOnDB(this.value)"></select></div>
+      <div class="dbinfo" id="s-dbinfo" style="display:none"></div>
+    </div>
+    <div id="s-dbcond" style="display:none">
+      <button class="tog" id="s-dbcondt" onclick="sTogDBCond()"><span class="togb" id="s-dbcondbox"></span><span id="s-dbcondlbl">条件付き効果 ON</span></button>
+    </div>
+    <div id="s-dbstkwrap" style="display:none">
+      <label class="fl-l" id="s-dbstklbl" style="margin-top:4px">スタック数</label>
+      <div class="sldw"><input type="range" class="sld" id="s-dbstk" min="0" max="7" value="0" oninput="sOnDBStk(this.value)"><span class="sldv" id="s-dbstkn">0</span></div>
+      <div style="font-family:var(--fm);font-size:10px;color:var(--amb)" id="s-dbstkfx">クリダメ +0%</div>
     </div>
   </div>
-  <div class="card card-teal">
-    <div class="card-title">📊 ステータス入力</div>
-    <div class="note" style="margin-bottom:9px">武器・キャラ由来は自動適用済み。駆動コア等の追加分を入力。</div>
-    <div class="fl-2">
-      <div class="fl"><label class="fl-label">追加 攻撃力%</label><input type="number" id="atk-pct" value="0" min="0" step="0.1"></div>
-      <div class="fl"><label class="fl-label">攻撃力 加算</label><input type="number" id="atk-flat" value="0" min="0"></div>
-      <div class="fl"><label class="fl-label">追加 クリ率%</label><input type="number" id="crit-r" value="5" min="0" step="0.1"></div>
-      <div class="fl"><label class="fl-label">クリダメ%</label><input type="number" id="crit-d" value="50" min="0" step="0.1"></div>
+
+  <!-- ステータス -->
+  <div class="card tl">
+    <div class="ct">📊 ステータス入力</div>
+    <div class="note" style="margin-bottom:9px">武器・キャラ由来は自動適用。駆動コア等の追加分を入力。</div>
+    <div class="g2f">
+      <div class="fl"><label class="fl-l">追加 攻撃力%</label><input type="number" id="s-atkp" value="0" step="0.1" oninput="sS.atkPct=+this.value||0;sRefresh()"></div>
+      <div class="fl"><label class="fl-l">攻撃力 加算</label><input type="number" id="s-atkf" value="0" oninput="sS.atkFlat=+this.value||0;sRefresh()"></div>
+      <div class="fl"><label class="fl-l">追加 クリ率%</label><input type="number" id="s-cr" value="5" step="0.1" oninput="sS.critR=+this.value||0;sRefresh()"></div>
+      <div class="fl"><label class="fl-l">クリダメ%</label><input type="number" id="s-cd" value="50" step="0.1" oninput="sS.critD=+this.value||0;sRefresh()"></div>
     </div>
-    <div class="fl"><label class="fl-label">連環パワー</label><input type="number" id="chain-p" value="0" min="0"></div>
-    <div class="fl-2">
-      <div class="fl"><label class="fl-label">汎用ダメ効果%</label><input type="number" id="gen-dmg" value="0" min="0" step="0.1"></div>
-      <div class="fl"><label class="fl-label" id="elem-lbl">異能ダメ効果%</label><input type="number" id="elem-dmg" value="0" min="0" step="0.1"></div>
+    <div class="fl"><label class="fl-l">連環パワー</label><input type="number" id="s-cp" value="0" oninput="sS.chainP=+this.value||0;sRefresh()"></div>
+    <div class="g2f">
+      <div class="fl"><label class="fl-l">汎用ダメ効果%</label><input type="number" id="s-gd" value="0" step="0.1" oninput="sS.genDmg=+this.value||0;sRefresh()"></div>
+      <div class="fl"><label class="fl-l" id="s-elbl">異能ダメ効果%</label><input type="number" id="s-ed" value="0" step="0.1" oninput="sS.elemDmg=+this.value||0;sRefresh()"></div>
     </div>
-    <div class="prev-box"><div class="prev-head">◆ 合計ステータス</div>
-      <div class="prev-grid">
-        <div class="prev-row"><span class="prev-lbl">合計攻撃力</span><span class="prev-val" id="pv-atk">—</span></div>
-        <div class="prev-row"><span class="prev-lbl">クリ率</span><span class="prev-val" id="pv-cr">—</span></div>
-        <div class="prev-row"><span class="prev-lbl">クリダメ</span><span class="prev-val" id="pv-cd">—</span></div>
-        <div class="prev-row"><span class="prev-lbl">ダメバフ</span><span class="prev-val" id="pv-db">—</span></div>
-        <div class="prev-row"><span class="prev-lbl">防御補正</span><span class="prev-val c" id="pv-def">—</span></div>
-        <div class="prev-row"><span class="prev-lbl">耐性補正</span><span class="prev-val c" id="pv-res">—</span></div>
-        <div class="prev-row"><span class="prev-lbl">クリ期待値</span><span class="prev-val" id="pv-crit">—</span></div>
-        <div class="prev-row"><span class="prev-lbl">浸染補正</span><span class="prev-val c" id="pv-con">—</span></div>
+    <div class="prev"><div class="prevh">◆ 合計ステータス プレビュー</div>
+      <div class="prevg">
+        <div class="prevr"><span class="prevl">合計攻撃力</span><span class="prevv" id="pv-atk">—</span></div>
+        <div class="prevr"><span class="prevl">クリ率</span><span class="prevv" id="pv-cr">—</span></div>
+        <div class="prevr"><span class="prevl">クリダメ</span><span class="prevv" id="pv-cd">—</span></div>
+        <div class="prevr"><span class="prevl">ダメバフ</span><span class="prevv" id="pv-db">—</span></div>
+        <div class="prevr"><span class="prevl">防御補正</span><span class="prevv c" id="pv-def">—</span></div>
+        <div class="prevr"><span class="prevl">耐性補正</span><span class="prevv c" id="pv-res">—</span></div>
+        <div class="prevr"><span class="prevl">クリ期待値</span><span class="prevv" id="pv-crit">—</span></div>
+        <div class="prevr"><span class="prevl">浸染補正</span><span class="prevv c" id="pv-con">—</span></div>
       </div>
     </div>
   </div>
-</div>
-<div class="row2">
-  <div class="card card-red">
-    <div class="card-title">🎯 敵設定</div>
-    <div class="fl-2">
-      <div class="fl"><label class="fl-label">敵 Lv</label><input type="number" id="enemy-lv" value="80" min="1" max="120"></div>
-      <div class="fl"><label class="fl-label">敵の種類</label><div class="boss-row"><button class="boss-btn on-mob" id="mob-btn" onclick="setBoss(false)">雑魚</button><button class="boss-btn" id="boss-btn" onclick="setBoss(true)">ボス</button></div></div>
-      <div class="fl"><label class="fl-label">基礎耐性%</label><input type="number" id="base-res" value="10" step="0.1"></div>
-      <div class="fl"><label class="fl-label">耐性無視%</label><input type="number" id="res-ign" value="0" step="0.1"></div>
-      <div class="fl"><label class="fl-label">耐性低下%</label><input type="number" id="res-down" value="0" step="0.1"></div>
-      <div class="fl"><label class="fl-label">防御無視%</label><input type="number" id="def-ign" value="0" step="0.1"></div>
+</div><!-- /g3 -->
+
+<div class="g2">
+  <!-- 敵設定 -->
+  <div class="card rd">
+    <div class="ct">🎯 敵設定</div>
+    <div class="g2f">
+      <div class="fl"><label class="fl-l">敵 Lv</label><input type="number" id="s-elv" value="80" min="1" oninput="sS.eLv=+this.value||80;sRefresh()"></div>
+      <div class="fl"><label class="fl-l">敵の種類</label><div class="brow"><button class="bbtn mob" id="s-mob" onclick="sSetBoss(false)">雑魚</button><button class="bbtn" id="s-boss" onclick="sSetBoss(true)">ボス</button></div></div>
+      <div class="fl"><label class="fl-l">基礎耐性%</label><input type="number" id="s-bres" value="10" step="0.1" oninput="sS.bRes=+this.value||0;sRefresh()"></div>
+      <div class="fl"><label class="fl-l">耐性無視%</label><input type="number" id="s-rign" value="0" step="0.1" oninput="sS.rIgn=+this.value||0;sRefresh()"></div>
+      <div class="fl"><label class="fl-l">耐性低下%</label><input type="number" id="s-rdown" value="0" step="0.1" oninput="sS.rDown=+this.value||0;sRefresh()"></div>
+      <div class="fl"><label class="fl-l">防御無視%</label><input type="number" id="s-dign" value="0" step="0.1" oninput="sS.dIgn=+this.value||0;sRefresh()"></div>
     </div>
   </div>
-  <div class="card card-amber">
-    <div class="card-title">✨ バフ・コンディション</div>
-    <button class="tog" id="t-spirit" onclick="togBuff('spirit')"><span class="tog-box" id="tc-spirit"></span>精神ダメージ（防御補正 1 固定）</button>
-    <button class="tog" id="t-skill"  onclick="togBuff('skill')"><span class="tog-box" id="tc-skill"></span>バイレールスキルバフ（クリダメ +30%）</button>
-    <button class="tog" id="t-ex"     onclick="togBuff('ex')"><span class="tog-box" id="tc-ex"></span>EXレール終結モード（EXボーナスヒット加算）</button>
-    <button class="tog" id="t-contam" onclick="togBuff('contam')"><span class="tog-box" id="tc-contam"></span>浸染・覆紋補正 ON</button>
+  <!-- バフ -->
+  <div class="card am">
+    <div class="ct">✨ バフ・コンディション</div>
+    <button class="tog" id="s-t-spi" onclick="sTogBuf('spirit')"><span class="togb" id="s-tb-spi"></span>精神ダメージ（防御補正 1 固定）</button>
+    <button class="tog" id="s-t-sk"  onclick="sTogBuf('skill')"><span class="togb" id="s-tb-sk"></span>バイレールスキルバフ（クリダメ +30%）</button>
+    <button class="tog" id="s-t-ex"  onclick="sTogBuf('ex')"><span class="togb" id="s-tb-ex"></span>EXレール終結モード（EXボーナスヒット加算）</button>
+    <button class="tog" id="s-t-con" onclick="sTogBuf('contam')"><span class="togb" id="s-tb-con"></span>浸染・覆紋補正 ON</button>
   </div>
-</div>
-<button class="calc-btn" onclick="calculate()">⚡ ダメージ計算実行</button>
-<div class="card card-amber results" id="results"><div class="card-title">💥 ダメージ計算結果</div><div id="results-body"></div></div>
-</div></div>
+</div><!-- /g2 -->
 
-<!-- ===== PARTY TAB ===== -->
+<button class="calcbtn" onclick="sCalc()">⚡ ダメージ計算実行</button>
+<div class="card am res" id="s-res"><div class="ct">💥 ダメージ計算結果</div><div id="s-res-body"></div></div>
+
+</div></div><!-- /single tab -->
+
+<!-- ═══════════════════════════════════════════════════
+     PARTY / ROTATION TAB
+═══════════════════════════════════════════════════ -->
 <div id="tab-party" class="tab-page">
 <div class="wrap">
 
-  <!-- Shared enemy settings -->
-  <div class="card card-red" style="margin-bottom:12px">
-    <div class="card-title">🎯 共通敵設定</div>
-    <div class="ps-row">
-      <div class="fl"><label class="fl-label">敵 Lv</label><input type="number" id="ps-elv" value="80" min="1" oninput="pShared('eLv',+this.value||80);pRefresh()"></div>
-      <div class="fl"><label class="fl-label">敵の種類</label><div class="boss-row"><button class="boss-btn on-mob" id="ps-mob" onclick="pSetBoss(false)">雑魚</button><button class="boss-btn" id="ps-boss" onclick="pSetBoss(true)">ボス</button></div></div>
-      <div class="fl"><label class="fl-label">基礎耐性%</label><input type="number" id="ps-bres" value="10" step="0.1" oninput="pShared('bRes',+this.value||0);pRefresh()"></div>
-      <div class="fl"><label class="fl-label">耐性無視%</label><input type="number" id="ps-rign" value="0" step="0.1" oninput="pShared('rIgn',+this.value||0);pRefresh()"></div>
-      <div class="fl"><label class="fl-label">耐性低下%</label><input type="number" id="ps-rdown" value="0" step="0.1" oninput="pShared('rDown',+this.value||0);pRefresh()"></div>
-      <div class="fl"><label class="fl-label">防御無視%</label><input type="number" id="ps-dign" value="0" step="0.1" oninput="pShared('dIgn',+this.value||0);pRefresh()"></div>
+  <!-- 共通敵設定 -->
+  <div class="card rd" style="margin-bottom:13px">
+    <div class="ct">🎯 共通敵設定</div>
+    <div class="psgrid">
+      <div class="fl"><label class="fl-l">敵 Lv</label><input type="number" id="ps-elv" value="80" min="1" oninput="PS.eLv=+this.value||80;pRefresh()"></div>
+      <div class="fl"><label class="fl-l">敵の種類</label><div class="brow"><button class="bbtn mob" id="ps-mob" onclick="pSetBoss(false)">雑魚</button><button class="bbtn" id="ps-boss" onclick="pSetBoss(true)">ボス</button></div></div>
+      <div class="fl"><label class="fl-l">基礎耐性%</label><input type="number" id="ps-bres" value="10" step="0.1" oninput="PS.bRes=+this.value||0;pRefresh()"></div>
+      <div class="fl"><label class="fl-l">耐性無視%</label><input type="number" id="ps-rign" value="0" step="0.1" oninput="PS.rIgn=+this.value||0;pRefresh()"></div>
+      <div class="fl"><label class="fl-l">耐性低下%</label><input type="number" id="ps-rdown" value="0" step="0.1" oninput="PS.rDown=+this.value||0;pRefresh()"></div>
+      <div class="fl"><label class="fl-l">防御無視%</label><input type="number" id="ps-dign" value="0" step="0.1" oninput="PS.dIgn=+this.value||0;pRefresh()"></div>
     </div>
   </div>
 
   <div class="party-area">
-
-    <!-- LEFT: Slot config + Available attacks -->
+    <!-- LEFT: slot config + attacks -->
     <div>
-      <div class="slot-tabs" id="slot-tabs">
-        <button class="slot-tab si0 active" id="slot-tab-0" onclick="switchSlot(0)">キャラ1</button>
-        <button class="slot-tab si1"        id="slot-tab-1" onclick="switchSlot(1)">キャラ2</button>
-        <button class="slot-tab si2"        id="slot-tab-2" onclick="switchSlot(2)">キャラ3</button>
-        <button class="slot-tab si3"        id="slot-tab-3" onclick="switchSlot(3)">キャラ4</button>
+      <div class="stabs" id="stabs">
+        <button class="stab si0 on" id="stab-0" onclick="switchSlot(0)">キャラ1</button>
+        <button class="stab si1"    id="stab-1" onclick="switchSlot(1)">キャラ2</button>
+        <button class="stab si2"    id="stab-2" onclick="switchSlot(2)">キャラ3</button>
+        <button class="stab si3"    id="stab-3" onclick="switchSlot(3)">キャラ4</button>
       </div>
-      <div class="slot-panel" id="slot-panel">
-        <!-- Config toggle -->
-        <button class="config-toggle" onclick="toggleConfig()">
-          <div class="ct-info">
-            <span class="ct-name" id="cfg-name">キャラ未選択</span>
-            <span class="config-badge" id="cfg-badge-atk">ATK —</span>
-            <span class="config-badge" id="cfg-badge-cr">CR —</span>
-            <span class="config-badge" id="cfg-badge-cd">CD —</span>
+      <div class="spanel">
+        <!-- Config accordion -->
+        <button class="cfg-tog" onclick="toggleCfg()">
+          <div class="cfg-info">
+            <span class="cfg-name" id="cfg-nm">キャラ未選択</span>
+            <span class="cfg-badge" id="cfg-batk">ATK —</span>
+            <span class="cfg-badge" id="cfg-bcr">CR —</span>
+            <span class="cfg-badge" id="cfg-bcd">CD —</span>
           </div>
-          <span class="config-arrow" id="cfg-arrow">▲</span>
+          <span class="cfg-arr open" id="cfg-arr">▲</span>
         </button>
-        <div class="config-body open" id="config-body">
-          <div class="fl-2" style="gap:7px;margin-bottom:7px">
-            <div><label class="fl-label" id="p-wtype-lbl">キャラクター</label>
-              <div class="sel-wrap"><select id="p-char-sel" onchange="pOnCharChange(this.value)"></select></div></div>
-            <div><label class="fl-label">武器</label>
-              <div class="sel-wrap"><select id="p-weap-sel" onchange="pOnWeapChange(this.value)"></select></div></div>
+        <div class="cfg-body open" id="cfg-body">
+          <div class="g2f" style="gap:7px;margin-bottom:7px">
+            <div><label class="fl-l" id="p-wlbl">キャラクター</label><div class="sw"><select id="p-char" onchange="pOnChar(this.value)"></select></div></div>
+            <div><label class="fl-l">武器</label><div class="sw"><select id="p-weap" onchange="pOnWeap(this.value)"></select></div></div>
           </div>
-          <div class="fl-2" style="gap:7px;margin-bottom:7px">
-            <div class="fl"><label class="fl-label">Lv</label><input type="number" id="p-char-lv" value="80" min="1" max="90" oninput="pSave('cLv',+this.value||80);pRefresh()"></div>
-            <div class="fl"><label class="fl-label">キャラ凸</label><div class="cvx-row" id="p-char-cvx"></div></div>
+          <div class="g2f" style="gap:7px;margin-bottom:7px">
+            <div class="fl"><label class="fl-l">Lv</label><input type="number" id="p-lv" value="80" min="1" max="90" oninput="pSave('cLv',+this.value||80);pRefresh()"></div>
+            <div class="fl"><label class="fl-l">キャラ凸</label><div class="cvr" id="p-cvx"></div></div>
           </div>
-          <div id="p-stack-sec" style="display:none;margin-bottom:7px">
-            <label class="fl-label" id="p-stack-lbl">スタック数</label>
-            <div class="sld-wrap"><input type="range" class="sld" id="p-weap-stk" min="0" max="10" value="0" oninput="pOnStk(this.value)"><span class="sld-num" id="p-stk-num">0</span></div>
-            <div style="font-family:var(--mono);font-size:11px;color:var(--amber);margin-top:3px" id="p-stk-info"></div>
+          <div id="p-stkwrap" style="display:none;margin-bottom:7px">
+            <label class="fl-l" id="p-stklbl">スタック数</label>
+            <div class="sldw"><input type="range" class="sld" id="p-stk" min="0" max="10" value="0" oninput="pOnStk(this.value)"><span class="sldv" id="p-stkn">0</span></div>
+            <div style="font-family:var(--fm);font-size:10px;color:var(--amb)" id="p-stkfx"></div>
           </div>
-          <div class="fl-2" style="gap:6px;margin-bottom:6px">
-            <div class="fl"><label class="fl-label">追加 攻撃力%</label><input type="number" id="p-atk-pct" value="0" step="0.1" oninput="pSave('atkPct',+this.value||0);pRefresh()"></div>
-            <div class="fl"><label class="fl-label">攻撃力 加算</label><input type="number" id="p-atk-flat" value="0" oninput="pSave('atkFlat',+this.value||0);pRefresh()"></div>
-            <div class="fl"><label class="fl-label">追加 クリ率%</label><input type="number" id="p-crit-r" value="5" step="0.1" oninput="pSave('critR',+this.value||0);pRefresh()"></div>
-            <div class="fl"><label class="fl-label">クリダメ%</label><input type="number" id="p-crit-d" value="50" step="0.1" oninput="pSave('critD',+this.value||0);pRefresh()"></div>
-            <div class="fl"><label class="fl-label">連環パワー</label><input type="number" id="p-chain-p" value="0" oninput="pSave('chainP',+this.value||0);pRefresh()"></div>
-            <div class="fl"><label class="fl-label">汎用ダメ効果%</label><input type="number" id="p-gen-dmg" value="0" step="0.1" oninput="pSave('genDmg',+this.value||0);pRefresh()"></div>
-            <div class="fl" style="grid-column:span 2"><label class="fl-label" id="p-elem-lbl">異能ダメ効果%</label><input type="number" id="p-elem-dmg" value="0" step="0.1" oninput="pSave('elemDmg',+this.value||0);pRefresh()"></div>
+          <div class="g2f" style="gap:6px;margin-bottom:6px">
+            <div class="fl"><label class="fl-l">追加 攻撃力%</label><input type="number" id="p-atkp" value="0" step="0.1" oninput="pSave('atkPct',+this.value||0);pRefresh()"></div>
+            <div class="fl"><label class="fl-l">攻撃力 加算</label><input type="number" id="p-atkf" value="0" oninput="pSave('atkFlat',+this.value||0);pRefresh()"></div>
+            <div class="fl"><label class="fl-l">追加 クリ率%</label><input type="number" id="p-cr" value="5" step="0.1" oninput="pSave('critR',+this.value||0);pRefresh()"></div>
+            <div class="fl"><label class="fl-l">クリダメ%</label><input type="number" id="p-cd" value="50" step="0.1" oninput="pSave('critD',+this.value||0);pRefresh()"></div>
+            <div class="fl"><label class="fl-l">連環パワー</label><input type="number" id="p-cp" value="0" oninput="pSave('chainP',+this.value||0);pRefresh()"></div>
+            <div class="fl"><label class="fl-l">汎用ダメ効果%</label><input type="number" id="p-gd" value="0" step="0.1" oninput="pSave('genDmg',+this.value||0);pRefresh()"></div>
+            <div class="fl" style="grid-column:span 2"><label class="fl-l" id="p-elbl">異能ダメ効果%</label><input type="number" id="p-ed" value="0" step="0.1" oninput="pSave('elemDmg',+this.value||0);pRefresh()"></div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:7px">
-            <div class="slv-item"><div class="slv-head"><span class="slv-name">通常攻撃</span><span class="slv-tag">Lv<span class="lv" id="p-slvv-n">10</span>/<span id="p-slvm-n">10</span></span></div><input type="range" class="slv-range" id="p-slv-n" min="1" max="10" value="10" oninput="pOnSlv('n',this.value)"></div>
-            <div class="slv-item"><div class="slv-head"><span class="slv-name">バイレール</span><span class="slv-tag">Lv<span class="lv" id="p-slvv-s">10</span>/<span id="p-slvm-s">10</span></span></div><input type="range" class="slv-range" id="p-slv-s" min="1" max="10" value="10" oninput="pOnSlv('s',this.value)"></div>
-            <div class="slv-item"><div class="slv-head"><span class="slv-name">EXレール</span><span class="slv-tag">Lv<span class="lv" id="p-slvv-ex">10</span>/<span id="p-slvm-ex">10</span></span></div><input type="range" class="slv-range" id="p-slv-ex" min="1" max="10" value="10" oninput="pOnSlv('ex',this.value)"></div>
-            <div class="slv-item"><div class="slv-head"><span class="slv-name">サポート</span><span class="slv-tag">Lv<span class="lv" id="p-slvv-sup">10</span>/<span id="p-slvm-sup">10</span></span></div><input type="range" class="slv-range" id="p-slv-sup" min="1" max="10" value="10" oninput="pOnSlv('sup',this.value)"></div>
+          <div class="g2f" style="gap:8px;margin-bottom:7px">
+            <div class="slvi"><div class="slvh"><span class="slvn">通常攻撃</span><span class="slvt">Lv<span class="lv" id="p-slvv-n">10</span>/<span id="p-slvm-n">10</span></span></div><input type="range" class="slvr" id="p-slv-n" min="1" max="10" value="10" oninput="pOnSlv('n',this.value)"></div>
+            <div class="slvi"><div class="slvh"><span class="slvn">バイレール</span><span class="slvt">Lv<span class="lv" id="p-slvv-s">10</span>/<span id="p-slvm-s">10</span></span></div><input type="range" class="slvr" id="p-slv-s" min="1" max="10" value="10" oninput="pOnSlv('s',this.value)"></div>
+            <div class="slvi"><div class="slvh"><span class="slvn">EXレール</span><span class="slvt">Lv<span class="lv" id="p-slvv-ex">10</span>/<span id="p-slvm-ex">10</span></span></div><input type="range" class="slvr" id="p-slv-ex" min="1" max="10" value="10" oninput="pOnSlv('ex',this.value)"></div>
+            <div class="slvi"><div class="slvh"><span class="slvn">サポート</span><span class="slvt">Lv<span class="lv" id="p-slvv-sup">10</span>/<span id="p-slvm-sup">10</span></span></div><input type="range" class="slvr" id="p-slv-sup" min="1" max="10" value="10" oninput="pOnSlv('sup',this.value)"></div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
-            <button class="tog" id="p-t-spirit" onclick="pTogBuf('spirit')"><span class="tog-box" id="p-tc-spirit"></span>精神ダメ固定</button>
-            <button class="tog" id="p-t-skill"  onclick="pTogBuf('skill')"><span class="tog-box" id="p-tc-skill"></span>スキルバフ</button>
-            <button class="tog" id="p-t-ex"     onclick="pTogBuf('ex')"><span class="tog-box" id="p-tc-ex"></span>EXモード</button>
-            <button class="tog" id="p-t-contam" onclick="pTogBuf('contam')"><span class="tog-box" id="p-tc-contam"></span>浸染・覆紋</button>
+          <!-- Drive block -->
+          <div class="fl"><label class="fl-l">駆動ブロック</label>
+            <div class="sw"><select id="p-db" onchange="pOnDB(this.value)"></select></div>
+            <div id="p-dbcond" style="display:none">
+              <button class="tog" id="p-dbcondt" onclick="pTogDBCond()" style="font-size:11px;padding:5px 8px;margin-top:3px">
+                <span class="togb" id="p-dbcondbox"></span><span id="p-dbcondlbl">条件付き効果</span></button>
+            </div>
+            <div id="p-dbstkwrap" style="display:none">
+              <div class="sldw" style="margin-top:4px"><input type="range" class="sld" id="p-dbstk" min="0" max="7" value="0" oninput="pOnDBStk(this.value)"><span class="sldv" id="p-dbstkn">0</span></div>
+              <div style="font-family:var(--fm);font-size:10px;color:var(--amb)" id="p-dbstkfx">クリダメ +0%</div>
+            </div>
           </div>
-        </div>
+          <!-- Buffs (compact 2x2) -->
+          <div class="g2f" style="gap:4px">
+            <button class="tog" id="p-t-spi" onclick="pTogBuf('spirit')"><span class="togb" id="p-tb-spi"></span>精神ダメ固定</button>
+            <button class="tog" id="p-t-sk"  onclick="pTogBuf('skill')"><span class="togb" id="p-tb-sk"></span>スキルバフ</button>
+            <button class="tog" id="p-t-ex"  onclick="pTogBuf('ex')"><span class="togb" id="p-tb-ex"></span>EXモード</button>
+            <button class="tog" id="p-t-con" onclick="pTogBuf('contam')"><span class="togb" id="p-tb-con"></span>浸染・覆紋</button>
+          </div>
+        </div><!-- /cfg-body -->
 
-        <!-- Available attacks -->
-        <div style="margin-top:10px">
+        <!-- Available Attacks -->
+        <div style="margin-top:11px">
           <div class="avail-head">
-            <span>利用可能な攻撃 <span style="font-size:9px;font-weight:400;font-family:var(--mono)">&nbsp;クリックで追加</span></span>
-            <span id="avail-char-tag" style="font-family:var(--mono);font-size:10px;color:var(--txt2)"></span>
+            <span>利用可能な攻撃 <span style="font-size:9px;font-weight:400;font-family:var(--fm);color:var(--t2)">クリックで追加</span></span>
+            <span id="avail-tag" style="font-family:var(--fm);font-size:10px;color:var(--t2)"></span>
           </div>
-          <div class="avail-scroll" id="avail-list"><div class="rot-empty">キャラクターを選択してください</div></div>
+          <div class="avail-scroll" id="avail-list"><div class="no-data">キャラクターを選択してください</div></div>
         </div>
       </div>
-    </div>
+    </div><!-- /left -->
 
-    <!-- RIGHT: Unified rotation list -->
+    <!-- RIGHT: Rotation List -->
     <div class="rot-panel">
-      <div class="rot-header">
-        <span class="rot-header-title">🔄 ローテーション</span>
-        <span class="rot-header-info" id="rot-info"></span>
-        <button class="clear-btn" onclick="clearAll()">🗑 全クリア</button>
+      <div class="rot-hdr">
+        <span class="rot-title">🔄 ローテーション</span>
+        <span class="rot-info" id="rot-info"></span>
+        <button class="clearbtn" onclick="clearAll()">🗑 全クリア</button>
       </div>
-      <div class="rot-scroll" id="rot-list"><div class="rot-empty">左の攻撃リストからクリックして追加してください</div></div>
-      <div class="rot-footer">
-        <div><span class="rot-total-lbl">合計ダメージ </span><span class="rot-total" id="rot-grand">—</span></div>
+      <div class="rot-scroll" id="rot-list"><div class="rot-empty">左の攻撃リストからクリックして追加<br><span style="font-size:10px">同じ攻撃を複数回追加可能 / QS=0.10sとして計算</span></div></div>
+      <div class="rot-ftr">
+        <div class="rot-stat"><span class="rot-stat-l">合計ダメージ</span><span class="rot-stat-v dmg" id="rot-dmg">—</span></div>
+        <div class="rot-stat"><span class="rot-stat-l">DPS</span><span class="rot-stat-v dps" id="rot-dps">—</span></div>
+        <div class="rot-stat"><span class="rot-stat-l">総時間</span><span class="rot-stat-v time" id="rot-time">0s</span></div>
       </div>
     </div>
-
   </div><!-- /party-area -->
 
-  <button class="calc-btn" onclick="calcParty()">⚡ ローテ火力算出</button>
-  <div class="card card-amber results" id="party-results">
-    <div class="card-title">💥 ローテーション火力結果</div>
-    <div id="party-results-body"></div>
+  <button class="calcbtn" onclick="pCalc()">⚡ ローテ火力 / DPS 算出</button>
+  <div class="card am res" id="p-res">
+    <div class="ct">💥 ローテーション火力結果</div>
+    <div id="p-res-body"></div>
   </div>
 
-</div></div>
+</div></div><!-- /party tab -->
 
 <script>
+'use strict';
 /* ================================================================
-   SHARED DATA
+   DATA
 ================================================================ */
 const CHARS = {
   nanari:{
     id:'nanari',name:'ナナリ',element:'霊',wType:'プラズマ',baseAtk:396,
     cvx:Array(6).fill('効果未設定'),
     cats:[
-      {id:'normal', label:'通常攻撃 (N)', lvKey:'n', color:'blue',
-        attacks:   [{id:'N1',m:59.2},{id:'N2',m:77.6},{id:'N3',m:320.3},{id:'N4',m:96.6},{id:'N5',m:308.6}],
-        exCombined:[{id:'N1+UN1',m:109.2,note:'59.2+50'},{id:'N2+UN2',m:122.6,note:'77.6+45'},{id:'N3+UN3',m:485.3,note:'320.3+165'},{id:'N4+UN4',m:286.8,note:'96.6+190.2'},{id:'N5+UN5',m:518.5,note:'308.6+209.9'}]},
-      {id:'heavy',  label:'重撃 (C)', lvKey:'n', color:'purple',
-        attacks:   [{id:'C1',m:146.5},{id:'C2',m:215.7},{id:'C3',m:316.8}],
-        exCombined:[{id:'C1+UC1',m:208.7,note:'146.5+62.2'},{id:'C2+UC2',m:442.8,note:'215.7+227.1'},{id:'C3+UC3',m:596.4,note:'316.8+279.6'}]},
-      {id:'dodge',  label:'回避反撃 (D)', lvKey:'n', color:'teal',
-        attacks:   [{id:'D',m:331}],
-        exCombined:[{id:'D+UD',m:502,note:'331+171'}]},
-      {id:'skill',  label:'バイレールスキル (S)', lvKey:'s', color:'amber',
-        attacks:   [{id:'S',m:999.5,note:'使用後クリダメ+30%'}],
-        exCombined:[{id:'S+US',m:1239.5,note:'999.5+240'}]},
-      {id:'ex',     label:'EXレール終結 (U)', lvKey:'ex', color:'red',
-        attacks:   [{id:'U',m:1999.2}]},
-      {id:'support',label:'サポートスキル (SS)', lvKey:'sup', color:'pink',
-        attacks:   [{id:'SS',m:399}]},
+      {id:'normal',label:'通常攻撃 (N)',lvKey:'n',color:'bl',
+        atks:   [{id:'N1',m:59.2,t:0.33},{id:'N2',m:77.6,t:0.33},{id:'N3',m:320.3,t:0.66},{id:'N4',m:96.6,t:1},{id:'N5',m:308.6,t:1.2}],
+        exAtks: [{id:'N1+UN1',m:109.2,t:0.33,note:'59.2+50'},{id:'N2+UN2',m:122.6,t:0.33,note:'77.6+45'},{id:'N3+UN3',m:485.3,t:0.66,note:'320.3+165'},{id:'N4+UN4',m:286.8,t:1,note:'96.6+190.2'},{id:'N5+UN5',m:518.5,t:1.2,note:'308.6+209.9'}]},
+      {id:'heavy',label:'重撃 (C)',lvKey:'n',color:'pu',
+        atks:   [{id:'C1',m:146.5,t:0.66},{id:'C2',m:215.7,t:1},{id:'C3',m:316.8,t:1.1}],
+        exAtks: [{id:'C1+UC1',m:208.7,t:0.66,note:'146.5+62.2'},{id:'C2+UC2',m:442.8,t:1,note:'215.7+227.1'},{id:'C3+UC3',m:596.4,t:1.1,note:'316.8+279.6'}]},
+      {id:'dodge',label:'回避反撃 (D)',lvKey:'n',color:'tl',
+        atks:   [{id:'D',m:331,t:0}],
+        exAtks: [{id:'D+UD',m:502,t:0,note:'331+171'}]},
+      {id:'skill',label:'バイレールスキル (S)',lvKey:'s',color:'am',
+        atks:   [{id:'S',m:999.5,t:1.2,note:'使用後クリダメ+30%'}],
+        exAtks: [{id:'S+US',m:1239.5,t:1.2,note:'999.5+240'}]},
+      {id:'ex',label:'EXレール終結 (U)',lvKey:'ex',color:'rd',
+        atks:   [{id:'U',m:1999.2,t:0}]},
+      {id:'support',label:'サポートスキル (SS)',lvKey:'sup',color:'pk',
+        atks:   [{id:'SS',m:399,t:0}]},
     ],
     hasSkillBuff:true,skillBuffCD:30,hasEx:true,
   },
   requiem:{
     id:'requiem',name:'レクイエム',element:'闇',wType:'液体',
-    baseAtk:null, atkScaling:{base:80,perLv:4},
+    baseAtk:null,atkScaling:{base:80,perLv:4},
     cvx:Array(6).fill('効果未設定'),
     cats:[
-      {id:'nn',       label:'近接通常 (NN)',      lvKey:'n',   color:'blue',
-        attacks:[{id:'NN1',m:133,note:'98+35'},{id:'NN2',m:60,note:'30×2'},{id:'NN3',m:93,note:'27+22×3'},{id:'NN4',m:150,note:'108+42'},{id:'NN5',m:294,note:'35×3+189'},{id:'NNB',m:30,note:'弾丸爆破・闇異能'}]},
-      {id:'fn',       label:'遠距離通常 (FN)',     lvKey:'n',   color:'sky',
-        attacks:[{id:'FN1',m:56},{id:'FN2',m:72,note:'24×3'},{id:'FN3',m:175},{id:'FN4',m:369,note:'24×3+297'},{id:'FN5',m:190}]},
-      {id:'nightmare',label:'悪夢 DoT',            lvKey:'n',   color:'purple',
-        attacks:[{id:'NAG',m:8,note:'1st×1秒・闇異能'}]},
-      {id:'dodge',    label:'回避反撃 (D)',         lvKey:'n',   color:'teal',
-        attacks:[{id:'D',m:424,note:'199+45×5'}]},
-      {id:'skill',    label:'バイレールスキル (S)', lvKey:'s',   color:'amber',
-        attacks:[{id:'S1',m:599,note:'寝覚めロード中・悪夢5st付与'}]},
-      {id:'ex',       label:'EXレール終結 (U)',     lvKey:'ex',  color:'red',
-        attacks:[{id:'UNN',m:1995,note:'506×2+85×5+186×3 近接'},{id:'UFN',m:1998,note:'188×4+1246 遠距離'}]},
+      {id:'nn',label:'近接通常 (NN)',lvKey:'n',color:'bl',
+        atks:[{id:'NN1',m:133,t:0.71,note:'98+35'},{id:'NN2',m:60,t:0.99,note:'30×2'},{id:'NN3',m:93,t:0.5,note:'27+22×3'},{id:'NN4',m:150,t:0.53,note:'108+42'},{id:'NN5',m:294,t:1.5,note:'35×3+189'},{id:'NNB',m:30,t:0,note:'弾丸爆破・闇異能'}]},
+      {id:'fn',label:'遠距離通常 (FN)',lvKey:'n',color:'sk',
+        atks:[{id:'FN1',m:56,t:0.33},{id:'FN2',m:72,t:0.25,note:'24×3'},{id:'FN3',m:175,t:0.66},{id:'FN4',m:369,t:1.33,note:'24×3+297'},{id:'FN5',m:190,t:1}]},
+      {id:'nag',label:'悪夢 DoT',lvKey:'n',color:'pu',
+        atks:[{id:'NAG',m:8,t:0,note:'1st×1秒・闇異能'}]},
+      {id:'dodge',label:'回避反撃 (D)',lvKey:'n',color:'tl',
+        atks:[{id:'D',m:424,t:0,note:'199+45×5'}]},
+      {id:'skill',label:'バイレールスキル (S)',lvKey:'s',color:'am',
+        atks:[{id:'S1',m:599,t:0.66,note:'寝覚めロード中・悪夢5st付与'}]},
+      {id:'ex',label:'EXレール終結 (U)',lvKey:'ex',color:'rd',
+        atks:[{id:'UNN',m:1995,t:0,note:'506×2+85×5+186×3 近接'},{id:'UFN',m:1998,t:0,note:'188×4+1246 遠距離'}]},
     ],
     hasSkillBuff:false,hasEx:true,
   }
 };
 
 const WEAPS = {
-  prepare:{'id':'prepare','name':'プリペア','wType':'プラズマ','baseAtk':570,'subType':'cr','subLbl':'クリティカル率','subVal':24,'atkPct':15,'stacks':null},
-  'last-rose':{'id':'last-rose','name':'ラスト・ローズ','wType':'液体','baseAtk':570,'subType':'cr','subLbl':'クリティカル率','subVal':24,'atkPct':14,'stacks':{'name':'暗棘','max':10,'type':'cd','per':6}}
+  prepare:    {id:'prepare',   name:'プリペア',      wType:'プラズマ',baseAtk:570,subType:'cr',subLbl:'クリティカル率',subVal:24,atkPct:15,stacks:null},
+  'last-rose':{id:'last-rose',name:'ラスト・ローズ',wType:'液体',   baseAtk:570,subType:'cr',subLbl:'クリティカル率',subVal:24,atkPct:14,stacks:{name:'暗棘',max:10,type:'cd',per:6}},
+};
+
+const DRIVE_BLOCKS = {
+  none:         {id:'none',         name:'なし（駆動ブロックなし）',           hasConditional:false,hasStacks:false},
+  diabolos:     {id:'diabolos',     name:'ディアボロス',                       hasConditional:true, hasStacks:false,
+    condLabel:'暗星/濁燃 関与後（耐性無視12%→24%）', info:'闇異能ダメ+10% / 耐性無視12%（条件後24%）'},
+  forestFirefly:{id:'forestFirefly',name:'森に棲む蛍の心',                     hasConditional:false,hasStacks:true,maxStacks:7,
+    stackLabel:'スタック数（1st=クリダメ+8%・最大7st）',info:'クリダメ +8%/st（最大7st,ローテ自動）'},
+  lostLight:    {id:'lostLight',    name:'失われた光',                          hasConditional:true, hasStacks:false,
+    condLabel:'EXレール終結後（防御無視+25%）',info:'光異能ダメ+10% / EX後 防御無視+25%（ローテ自動）'},
 };
 
 /* ================================================================
-   SHARED CALC
+   SHARED CALCULATIONS
 ================================================================ */
-function getCharBaseAtk(cId, lv){
-  const c=CHARS[cId];
-  if(c.atkScaling) return c.atkScaling.base+(lv-1)*c.atkScaling.perLv;
-  return c.baseAtk||0;
+const cBaseAtk=(cId,lv)=>{const c=CHARS[cId];return c.atkScaling?c.atkScaling.base+(lv-1)*c.atkScaling.perLv:c.baseAtk||0};
+const cATK=(cb,wb,p,f)=>(cb+wb)*(1+p/100)+f;
+const cDef=(pLv,eLv,boss,di,sp)=>{if(sp)return 1;const dr=boss?.8:.75;const a=pLv+100,b=(eLv+100)*dr*(1-di/100);return a/(a+b)};
+const cRes=(b,i,d)=>1-(b-i-d)/100;
+const cCrit=(cr,cd)=>1+Math.min(Math.max(cr,0),100)/100*(cd/100);
+const cCon=(on,cp)=>on?1.2*(1+.2*cp/(cp+180)):1;
+const cHit=(atk,m,db,cr,df,rs,cn)=>atk*(m/100)*(1+db/100)*cr*df*rs*cn;
+const getET=(e)=>{const t=e.t||0;return t===0?0:(e.qs?0.1:t)};
+
+function getDBFx(dbId,cond,stacks){
+  const db=DRIVE_BLOCKS[dbId];if(!db||db.id==='none')return{};
+  switch(db.id){
+    case 'diabolos':     return{elemDmgBonus:10,resIgnBonus:cond?24:12};
+    case 'forestFirefly':return{critDmgBonus:Math.min(stacks||0,7)*8};
+    case 'lostLight':    return{elemDmgBonus:10,defIgnBonus:cond?25:0};
+  }
+  return{};
 }
-const calcATK=(cb,wb,p,f)=>(cb+wb)*(1+p/100)+f;
-const calcDef=(pLv,eLv,boss,di,sp)=>{if(sp)return 1;const dr=boss?.8:.75;const a=pLv+100,b=(eLv+100)*dr*(1-di/100);return a/(a+b)};
-const calcRes=(b,i,d)=>1-(b-i-d)/100;
-const calcCrit=(cr,cd)=>1+Math.min(Math.max(cr,0),100)/100*(cd/100);
-const calcContam=(on,cp)=>on?1.2*(1+.2*cp/(cp+180)):1;
-const hitDmg=(atk,m,db,crit,def,res,con)=>atk*(m/100)*(1+db/100)*crit*def*res*con;
 
 /* ================================================================
    SINGLE TAB STATE
 ================================================================ */
-const S={cId:'nanari',wId:'prepare',wCvx:1,wStk:0,cCvx:[],cLv:80,
-  slv:{n:10,s:10,ex:10,sup:10},atkPct:0,atkFlat:0,critR:5,critD:50,chainP:0,genDmg:0,elemDmg:0,
+const sS={
+  cId:'nanari',wId:'prepare',wCvx:1,wStk:0,cCvx:[],cLv:80,
+  slv:{n:10,s:10,ex:10,sup:10},
+  atkPct:0,atkFlat:0,critR:5,critD:50,chainP:0,genDmg:0,elemDmg:0,
   eLv:80,isBoss:false,bRes:10,rIgn:0,rDown:0,dIgn:0,
-  buf:{spirit:false,skill:false,ex:false,contam:false}};
+  buf:{spirit:false,skill:false,ex:false,contam:false},
+  dbId:'none',dbCond:false,dbStacks:0,
+};
 
-function getChar(){return CHARS[S.cId]}
-function getWeap(){const w=WEAPS[S.wId];if(w&&w.wType===getChar().wType)return w;return Object.values(WEAPS).find(x=>x.wType===getChar().wType)||null}
-function effStats(){
-  const c=getChar(),w=getWeap();if(!c||!w||!getCharBaseAtk(c.id,S.cLv))return null;
+function sChar(){return CHARS[sS.cId]}
+function sWeap(){const w=WEAPS[sS.wId];if(w&&w.wType===sChar().wType)return w;return Object.values(WEAPS).find(x=>x.wType===sChar().wType)||null}
+function sMaxSlv(){const n=sS.cCvx.length;return n>=6?12:n>=3?11:10}
+
+function sEffStats(){
+  const c=sChar(),w=sWeap();if(!c||!w||!cBaseAtk(c.id,sS.cLv))return null;
+  const fx=getDBFx(sS.dbId,sS.dbCond,sS.dbStacks);
   const wCR=w.subType==='cr'?w.subVal:0,wCD=w.subType==='cd'?w.subVal:0;
-  const stkCD=(w.stacks&&w.stacks.type==='cd')?S.wStk*w.stacks.per:0;
-  const tCR=wCR+S.critR;let tCD=wCD+S.critD+stkCD;
-  if(S.buf.skill&&c.hasSkillBuff)tCD+=c.skillBuffCD;
-  const charBase=getCharBaseAtk(c.id,S.cLv);
-  const atk=calcATK(charBase,w.baseAtk,w.atkPct+S.atkPct,S.atkFlat);
-  const defM=calcDef(S.cLv,S.eLv,S.isBoss,S.dIgn,S.buf.spirit);
-  const resM=calcRes(S.bRes,S.rIgn,S.rDown);
-  const critM=calcCrit(tCR,tCD);const conM=calcContam(S.buf.contam,S.chainP);
-  const dmgB=S.genDmg+S.elemDmg;
+  const stkCD=(w.stacks&&w.stacks.type==='cd')?sS.wStk*w.stacks.per:0;
+  const tCR=wCR+sS.critR;
+  let tCD=wCD+sS.critD+stkCD+(fx.critDmgBonus||0);
+  if(sS.buf.skill&&c.hasSkillBuff)tCD+=c.skillBuffCD;
+  const atk=cATK(cBaseAtk(c.id,sS.cLv),w.baseAtk,w.atkPct+sS.atkPct,sS.atkFlat);
+  const defM=cDef(sS.cLv,sS.eLv,sS.isBoss,sS.dIgn+(fx.defIgnBonus||0),sS.buf.spirit);
+  const resM=cRes(sS.bRes,sS.rIgn+(fx.resIgnBonus||0),sS.rDown);
+  const critM=cCrit(tCR,tCD);const conM=cCon(sS.buf.contam,sS.chainP);
+  const dmgB=sS.genDmg+sS.elemDmg+(fx.elemDmgBonus||0);
   return{atk,defM,resM,critM,conM,dmgB,tCR,tCD};
 }
-function getMaxSlv(){const n=S.cCvx.length;return n>=6?12:n>=3?11:10}
-function onSlvChange(k,v){S.slv[k]=Math.min(getMaxSlv(),Math.max(1,parseInt(v)||1));document.getElementById(`slvv-${k}`).textContent=S.slv[k];refresh()}
-function updateSliders(){
-  const mx=getMaxSlv();document.getElementById('slv-max-disp').textContent=mx;
-  ['n','s','ex','sup'].forEach(k=>{if(S.slv[k]>mx)S.slv[k]=mx;const sl=document.getElementById(`slv-${k}`);sl.max=mx;sl.value=S.slv[k];document.getElementById(`slvv-${k}`).textContent=S.slv[k];document.getElementById(`slvm-${k}`).textContent=mx});
-}
-function populateCharSel(){
-  const sel=document.getElementById('char-sel');sel.innerHTML='';
-  Object.values(CHARS).forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=`${c.name}（${c.element}/${c.wType}）`;sel.appendChild(o)});
-  sel.value=S.cId;
-}
-function populateWeapSel(){
-  const c=getChar(),sel=document.getElementById('weap-sel');
-  const av=Object.values(WEAPS).filter(w=>w.wType===c.wType);sel.innerHTML='';
-  av.forEach(w=>{const o=document.createElement('option');o.value=w.id;o.textContent=`${w.name}（基礎攻${w.baseAtk}/${w.subLbl}+${w.subVal}%/攻+${w.atkPct}%）`;sel.appendChild(o)});
-  if(av.find(w=>w.id===S.wId))sel.value=S.wId;else{S.wId=av[0]?.id;sel.value=S.wId}
-  document.getElementById('wtype-label').textContent=`武器選択（${c.wType}種）`;
-}
-function updateCharChip(){
-  const c=getChar();
-  document.getElementById('chip-elem').textContent=c.element;document.getElementById('chip-wtype').textContent=c.wType;
-  document.getElementById('chip-atk').textContent=getCharBaseAtk(c.id,S.cLv)||'未登録';
-  document.getElementById('elem-lbl').textContent=`${c.element}異能ダメ効果%`;
-}
-function updateWeapInfo(){
-  const w=getWeap();if(!w)return;
-  document.getElementById('chip-watk').textContent=w.baseAtk;document.getElementById('chip-wsub').textContent=`${w.subLbl}+${w.subVal}%`;
-  document.getElementById('wi-atk').textContent=w.baseAtk;document.getElementById('wi-sub-lbl').textContent=w.subLbl;
-  document.getElementById('wi-sub').textContent=`+${w.subVal}%`;document.getElementById('wi-apct').textContent=`+${w.atkPct}%`;
-  const ss=document.getElementById('stack-sec');
-  if(w.stacks){ss.style.display='block';document.getElementById('stack-lbl').textContent=`${w.stacks.name} スタック数（0〜${w.stacks.max}）`;
-    const sl=document.getElementById('weap-stk');sl.max=w.stacks.max;sl.value=Math.min(S.wStk,w.stacks.max);updateStkInfo();}
-  else{ss.style.display='none';S.wStk=0}
-}
-function updateStkInfo(){const w=getWeap();if(!w||!w.stacks)return;document.getElementById('stk-num').textContent=S.wStk;document.getElementById('stk-info').textContent=w.stacks.type==='cd'?`クリティカルダメージ +${S.wStk*w.stacks.per}%`:'';}
-function buildWeapCvx(){const el=document.getElementById('weap-cvx');el.innerHTML='';for(let i=1;i<=5;i++){const b=document.createElement('button');b.className='cvx-btn'+(S.wCvx===i?' on':'');b.textContent=i;b.onclick=()=>{S.wCvx=i;buildWeapCvx();refresh()};el.appendChild(b)}}
-function buildCharCvx(){
-  const el=document.getElementById('char-cvx'),c=getChar();el.innerHTML='';
-  for(let i=1;i<=6;i++){const b=document.createElement('button');b.className='cvx-btn'+(S.cCvx.includes(i)?' on':'');b.textContent=i;b.title=c.cvx[i-1];b.onclick=()=>togCvx(i);el.appendChild(b)}
-  document.getElementById('cvx-note').style.display=S.cCvx.length?'block':'none';updateSliders();
-}
-function updateBufBtns(){
-  const c=getChar();document.getElementById('t-skill').disabled=!c.hasSkillBuff;document.getElementById('t-ex').disabled=!c.hasEx;
-  if(!c.hasSkillBuff)S.buf.skill=false;if(!c.hasEx)S.buf.ex=false;
-  ['spirit','skill','ex','contam'].forEach(k=>{document.getElementById(`t-${k}`)?.classList.toggle('on',!!S.buf[k]);const tc=document.getElementById(`tc-${k}`);if(tc)tc.textContent=S.buf[k]?'✓':''});
-}
-function updatePreview(){
-  const eff=effStats();
+
+function sRefresh(){
+  const eff=sEffStats();
   if(!eff){['pv-atk','pv-cr','pv-cd','pv-db','pv-def','pv-res','pv-crit','pv-con'].forEach(id=>document.getElementById(id).textContent='—');return;}
   const f=(v,d=2)=>v.toFixed(d);
   document.getElementById('pv-atk').textContent=Math.round(eff.atk).toLocaleString('ja-JP');
-  document.getElementById('pv-cr').textContent=f(eff.tCR,1)+'%';document.getElementById('pv-cd').textContent=f(eff.tCD,1)+'%';
-  document.getElementById('pv-db').textContent='+'+f(eff.dmgB,1)+'%';document.getElementById('pv-def').textContent=f(eff.defM*100)+'%';
-  document.getElementById('pv-res').textContent=f(eff.resM*100)+'%';document.getElementById('pv-crit').textContent='×'+f(eff.critM,4);
+  document.getElementById('pv-cr').textContent=f(eff.tCR,1)+'%';
+  document.getElementById('pv-cd').textContent=f(eff.tCD,1)+'%';
+  document.getElementById('pv-db').textContent='+'+f(eff.dmgB,1)+'%';
+  document.getElementById('pv-def').textContent=f(eff.defM*100)+'%';
+  document.getElementById('pv-res').textContent=f(eff.resM*100)+'%';
+  document.getElementById('pv-crit').textContent='×'+f(eff.critM,4);
   document.getElementById('pv-con').textContent='×'+f(eff.conM,4);
 }
-function onCharChange(id){S.cId=id;S.cCvx=[];S.buf.skill=false;S.buf.ex=false;S.wStk=0;const c=CHARS[id];const fw=Object.values(WEAPS).find(w=>w.wType===c.wType);if(fw)S.wId=fw.id;populateWeapSel();updateCharChip();updateWeapInfo();buildCharCvx();buildWeapCvx();updateBufBtns();updateSliders();refresh()}
-function onWeapChange(id){S.wId=id;S.wStk=0;updateWeapInfo();refresh()}
-function onStkChange(v){S.wStk=parseInt(v)||0;updateStkInfo();refresh()}
-function togCvx(n){const i=S.cCvx.indexOf(n);if(i>=0)S.cCvx.splice(i,1);else S.cCvx.push(n);buildCharCvx();refresh()}
-function setBoss(v){S.isBoss=v;document.getElementById('mob-btn').className='boss-btn'+(!v?' on-mob':'');document.getElementById('boss-btn').className='boss-btn'+(v?' on-boss':'');refresh()}
-function togBuff(k){const c=getChar();if(k==='skill'&&!c.hasSkillBuff)return;if(k==='ex'&&!c.hasEx)return;S.buf[k]=!S.buf[k];updateBufBtns();refresh()}
-function refresh(){updatePreview()}
-function rebuildAll(){populateCharSel();populateWeapSel();updateCharChip();updateWeapInfo();buildCharCvx();buildWeapCvx();updateBufBtns();updateSliders();updatePreview()}
 
-/* SINGLE CALCULATE */
-function calculate(){
-  const c=getChar(),eff=effStats();
-  const rEl=document.getElementById('results'),bEl=document.getElementById('results-body');
-  rEl.classList.remove('show');void rEl.offsetWidth;rEl.classList.add('show');rEl.scrollIntoView({behavior:'smooth',block:'start'});
-  if(!c.cats||!getCharBaseAtk(c.id,S.cLv)||!eff){bEl.innerHTML='<div class="result-err">⚠️ キャラクターデータが未設定です。</div>';return;}
-  const{atk,defM,resM,critM,conM,dmgB}=eff;
-  const H=m=>Math.round(hitDmg(atk,m,dmgB,critM,defM,resM,conM));
-  const RH=m=>hitDmg(atk,m,dmgB,critM,defM,resM,conM);
-  let html='';
-  const exOn=S.buf.ex&&c.hasEx;
-  c.cats.forEach(cat=>{
-    let list=(exOn&&cat.exCombined)?cat.exCombined:cat.attacks;
-    if(!list||!list.length)return;
-    const items=list.map(x=>({id:x.id,label:x.id,m:x.m,dmg:H(x.m)}));
-    html+=dmgSec(`${cat.label} Lv${S.slv[cat.lvKey]}${exOn&&cat.exCombined?' (EX込み)':''}`,items,`c-${cat.color}`);
-  });
-  html+=formulaBox(eff);
-  bEl.innerHTML=html;
+/* single tab builders */
+function sPopChar(){
+  const sel=document.getElementById('s-char');sel.innerHTML='';
+  Object.values(CHARS).forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=`${c.name}（${c.element}/${c.wType}）`;sel.appendChild(o)});
+  sel.value=sS.cId;
 }
-function dmgCard(it){return`<div class="dmg-card"><div class="dc-lbl">${it.label||it.id}</div><div class="dc-val">${it.dmg.toLocaleString('ja-JP')}</div><div class="dc-mult">×${it.m}%</div></div>`}
-function dmgSec(title,items,cls){if(!items?.length)return'';return`<div class="dmg-sec"><div class="dmg-sec-title ${cls}">${title}</div><div class="dmg-cards">${items.map(dmgCard).join('')}</div></div>`}
-function formulaBox(eff){const n=(v,d=4)=>v.toFixed(d);return`<div class="formula">攻撃力 <span class="fh">${Math.round(eff.atk).toLocaleString('ja-JP')}</span>　クリ補正 <span class="fh">×${n(eff.critM)}</span><span class="ft">（CR${n(eff.tCR,1)}%×CD${n(eff.tCD,1)}%）</span><br>防御補正 <span class="fh">×${n(eff.defM)}</span>　耐性補正 <span class="fh">×${n(eff.resM)}</span>　ダメバフ <span class="fh">×${n(1+eff.dmgB/100)}</span>　浸染補正 <span class="fh">×${n(eff.conM)}</span></div>`}
+function sPopWeap(){
+  const c=sChar(),sel=document.getElementById('s-weap');
+  const av=Object.values(WEAPS).filter(w=>w.wType===c.wType);sel.innerHTML='';
+  av.forEach(w=>{const o=document.createElement('option');o.value=w.id;o.textContent=`${w.name}（基礎攻${w.baseAtk}/${w.subLbl}+${w.subVal}%/攻+${w.atkPct}%）`;sel.appendChild(o)});
+  if(av.find(w=>w.id===sS.wId))sel.value=sS.wId;else if(av[0]){sS.wId=av[0].id;sel.value=sS.wId;}
+  document.getElementById('s-wlbl').textContent=`武器選択（${c.wType}種）`;
+}
+function sUpdateChip(){
+  const c=sChar(),lv=sS.cLv;
+  document.getElementById('s-elem').textContent=c.element;
+  document.getElementById('s-wtype').textContent=c.wType;
+  document.getElementById('s-batk').textContent=cBaseAtk(c.id,lv)||'未登録';
+  document.getElementById('s-elbl').textContent=`${c.element}異能ダメ効果%`;
+}
+function sUpdateWeapInfo(){
+  const w=sWeap();if(!w)return;
+  document.getElementById('s-watk').textContent=w.baseAtk;
+  document.getElementById('s-wsub').textContent=`${w.subLbl}+${w.subVal}%`;
+  document.getElementById('wi-atk').textContent=w.baseAtk;
+  document.getElementById('wi-subl').textContent=w.subLbl;
+  document.getElementById('wi-sub').textContent=`+${w.subVal}%`;
+  document.getElementById('wi-apct').textContent=`+${w.atkPct}%`;
+  const ss=document.getElementById('s-stkwrap');
+  if(w.stacks){ss.style.display='block';document.getElementById('s-stklbl').textContent=`${w.stacks.name}（0〜${w.stacks.max}）`;
+    const sl=document.getElementById('s-stk');sl.max=w.stacks.max;sl.value=Math.min(sS.wStk,w.stacks.max);sUpdateStkInfo();}
+  else{ss.style.display='none';sS.wStk=0;}
+}
+function sUpdateStkInfo(){
+  const w=sWeap();if(!w||!w.stacks)return;
+  document.getElementById('s-stkn').textContent=sS.wStk;
+  document.getElementById('s-stkfx').textContent=w.stacks.type==='cd'?`クリダメ +${sS.wStk*w.stacks.per}%`:'';
+}
+function sBuildCharCvx(){
+  const el=document.getElementById('s-cvx'),c=sChar();el.innerHTML='';
+  for(let i=1;i<=6;i++){const b=document.createElement('button');b.className='cvb'+(sS.cCvx.includes(i)?' on':'');b.textContent=i;b.title=c.cvx[i-1];b.onclick=()=>{const ix=sS.cCvx.indexOf(i);if(ix>=0)sS.cCvx.splice(ix,1);else sS.cCvx.push(i);sBuildCharCvx();sUpdateSliders();sRefresh()};el.appendChild(b);}
+  document.getElementById('s-cvx-note').style.display=sS.cCvx.length?'block':'none';
+  sUpdateSliders();
+}
+function sBuildWeapCvx(){
+  const el=document.getElementById('s-wcvx');el.innerHTML='';
+  for(let i=1;i<=5;i++){const b=document.createElement('button');b.className='cvb'+(sS.wCvx===i?' on':'');b.textContent=i;b.onclick=()=>{sS.wCvx=i;sBuildWeapCvx();sRefresh()};el.appendChild(b);}
+}
+function sUpdateSliders(){
+  const mx=sMaxSlv();document.getElementById('s-slvmax').textContent=mx;
+  ['n','s','ex','sup'].forEach(k=>{if(sS.slv[k]>mx)sS.slv[k]=mx;const sl=document.getElementById(`s-slv-${k}`);sl.max=mx;sl.value=sS.slv[k];document.getElementById(`s-slvv-${k}`).textContent=sS.slv[k];document.getElementById(`s-slvm-${k}`).textContent=mx;});
+}
+function sUpdateBufs(){
+  const c=sChar();
+  document.getElementById('s-t-sk').disabled=!c.hasSkillBuff;
+  document.getElementById('s-t-ex').disabled=!c.hasEx;
+  if(!c.hasSkillBuff)sS.buf.skill=false;if(!c.hasEx)sS.buf.ex=false;
+  ['spirit','skill','ex','contam'].forEach(k=>{const ids=[['spirit','spi'],['skill','sk'],['ex','ex'],['contam','con']];const map=Object.fromEntries(ids);const ab=map[k];document.getElementById(`s-t-${ab}`)?.classList.toggle('on',!!sS.buf[k]);const tb=document.getElementById(`s-tb-${ab}`);if(tb)tb.textContent=sS.buf[k]?'✓':'';});
+}
+function sUpdateDB(){
+  const db=DRIVE_BLOCKS[sS.dbId];
+  const infoEl=document.getElementById('s-dbinfo');
+  const condEl=document.getElementById('s-dbcond');
+  const stkEl=document.getElementById('s-dbstkwrap');
+  if(!db||db.id==='none'){infoEl.style.display='none';condEl.style.display='none';stkEl.style.display='none';return;}
+  infoEl.style.display='block';infoEl.textContent=db.info||'';
+  condEl.style.display=db.hasConditional?'block':'none';
+  if(db.hasConditional){document.getElementById('s-dbcondlbl').textContent=db.condLabel;const ct=document.getElementById('s-dbcondt');ct.classList.toggle('on',sS.dbCond);document.getElementById('s-dbcondbox').textContent=sS.dbCond?'✓':'';}
+  stkEl.style.display=db.hasStacks?'block':'none';
+  if(db.hasStacks){document.getElementById('s-dbstk').value=sS.dbStacks||0;document.getElementById('s-dbstkn').textContent=sS.dbStacks||0;document.getElementById('s-dbstkfx').textContent=`クリダメ +${(sS.dbStacks||0)*8}%`;}
+}
+
+/* single tab event handlers */
+function sOnChar(id){
+  sS.cId=id;sS.cCvx=[];sS.buf.skill=false;sS.buf.ex=false;sS.wStk=0;
+  const c=CHARS[id];const fw=Object.values(WEAPS).find(w=>w.wType===c.wType);if(fw)sS.wId=fw.id;
+  sPopWeap();sUpdateChip();sUpdateWeapInfo();sBuildCharCvx();sBuildWeapCvx();sUpdateBufs();sUpdateSliders();sRefresh();
+}
+function sOnWeap(id){sS.wId=id;sS.wStk=0;sUpdateWeapInfo();sRefresh()}
+function sOnStk(v){sS.wStk=parseInt(v)||0;sUpdateStkInfo();sRefresh()}
+function sOnSlv(k,v){sS.slv[k]=Math.min(sMaxSlv(),Math.max(1,parseInt(v)||1));document.getElementById(`s-slvv-${k}`).textContent=sS.slv[k];sRefresh()}
+function sSetBoss(v){sS.isBoss=v;document.getElementById('s-mob').className='bbtn'+(v?'':' mob');document.getElementById('s-boss').className='bbtn'+(v?' bos':'');sRefresh()}
+function sTogBuf(k){const c=sChar();if(k==='skill'&&!c.hasSkillBuff)return;if(k==='ex'&&!c.hasEx)return;sS.buf[k]=!sS.buf[k];sUpdateBufs();sRefresh()}
+function sOnDB(id){sS.dbId=id;sS.dbCond=false;sS.dbStacks=0;sUpdateDB();sRefresh()}
+function sTogDBCond(){sS.dbCond=!sS.dbCond;sUpdateDB();sRefresh()}
+function sOnDBStk(v){sS.dbStacks=parseInt(v)||0;document.getElementById('s-dbstkn').textContent=sS.dbStacks;document.getElementById('s-dbstkfx').textContent=`クリダメ +${sS.dbStacks*8}%`;sRefresh()}
+
+/* single tab init */
+function sInit(){
+  sPopChar();sPopWeap();sUpdateChip();sUpdateWeapInfo();sBuildCharCvx();sBuildWeapCvx();sUpdateBufs();sUpdateSliders();sRefresh();
+  // also populate DB selectors
+  ['s-db','p-db'].forEach(id=>{
+    const sel=document.getElementById(id);sel.innerHTML='';
+    Object.values(DRIVE_BLOCKS).forEach(db=>{const o=document.createElement('option');o.value=db.id;o.textContent=db.name+(db.info?` — ${db.info}`:'');sel.appendChild(o)});
+  });
+}
+
+/* single CALCULATE */
+function sCalc(){
+  const c=sChar(),eff=sEffStats();
+  const re=document.getElementById('s-res'),rb=document.getElementById('s-res-body');
+  re.classList.remove('show');void re.offsetWidth;re.classList.add('show');
+  re.scrollIntoView({behavior:'smooth',block:'start'});
+  if(!c.cats||!cBaseAtk(c.id,sS.cLv)||!eff){rb.innerHTML='<div class="rerr">⚠️ キャラクターデータが未設定です。</div>';return;}
+  const{atk,defM,resM,critM,conM,dmgB}=eff;
+  const H=m=>Math.round(cHit(atk,m,dmgB,critM,defM,resM,conM));
+  const RH=m=>cHit(atk,m,dmgB,critM,defM,resM,conM);
+  const exOn=sS.buf.ex&&c.hasEx;
+  let html='';
+  c.cats.forEach(cat=>{
+    let list=exOn&&cat.exAtks?cat.exAtks:cat.atks;
+    if(!list?.length)return;
+    const lv=sS.slv[cat.lvKey];
+    const label=exOn&&cat.exAtks?`${cat.label} Lv${lv} (EXボーナス込み)`:`${cat.label} Lv${lv}`;
+    const items=list.map(a=>({id:a.id,dmg:H(a.m),m:a.m}));
+    html+=`<div class="dsec"><div class="dsect ${cat.color}">${label}</div><div class="dcards">`;
+    items.forEach(it=>{html+=`<div class="dcard"><div class="dcl">${it.id}</div><div class="dcv">${it.dmg.toLocaleString('ja-JP')}</div><div class="dcm">×${it.m}%</div></div>`;});
+    html+=`</div></div>`;
+  });
+  html+=`<div class="formula"><span class="ft">補正係数：</span> 攻撃力 <span class="fh">${Math.round(atk).toLocaleString('ja-JP')}</span> クリ補正 <span class="fh">×${critM.toFixed(4)}</span><span class="ft">（CR${eff.tCR.toFixed(1)}%×CD${eff.tCD.toFixed(1)}%）</span> 防御補正 <span class="fh">×${defM.toFixed(4)}</span> 耐性補正 <span class="fh">×${resM.toFixed(4)}</span> ダメバフ <span class="fh">×${(1+dmgB/100).toFixed(4)}</span> 浸染 <span class="fh">×${conM.toFixed(4)}</span></div>`;
+  rb.innerHTML=html;
+}
 
 /* ================================================================
    PARTY STATE
 ================================================================ */
-function mkSlot(){return{charId:null,weapId:null,wCvx:1,wStk:0,cCvx:[],cLv:80,slv:{n:10,s:10,ex:10,sup:10},atkPct:0,atkFlat:0,critR:5,critD:50,chainP:0,genDmg:0,elemDmg:0,buf:{spirit:false,skill:false,ex:false,contam:false}}}
-const PARTY={activeSlot:0,shared:{eLv:80,isBoss:false,bRes:10,rIgn:0,rDown:0,dIgn:0},
-  slots:[mkSlot(),mkSlot(),mkSlot(),mkSlot()],rotation:[]};
-let _avail=[];
-const SLOT_COLORS=['var(--s0)','var(--s1)','var(--s2)','var(--s3)'];
+function mkSlot(){return{charId:null,weapId:null,wCvx:1,wStk:0,cCvx:[],cLv:80,slv:{n:10,s:10,ex:10,sup:10},atkPct:0,atkFlat:0,critR:5,critD:50,chainP:0,genDmg:0,elemDmg:0,buf:{spirit:false,skill:false,ex:false,contam:false},dbId:'none',dbCond:false,dbStacks:0}}
+const SLOTS=[mkSlot(),mkSlot(),mkSlot(),mkSlot()];
+const PS={eLv:80,isBoss:false,bRes:10,rIgn:0,rDown:0,dIgn:0};
+let ACTIVE=0;
+const ROT=[];
+let LR=null; // last results
+let AVAIL=[];
 
-function ps(i){return PARTY.slots[i]}
-function pChar(i){return ps(i).charId?CHARS[ps(i).charId]:null}
-function pWeap(i){const s=ps(i),c=pChar(i);if(!c||!s.weapId)return null;const w=WEAPS[s.weapId];if(w&&w.wType===c.wType)return w;return Object.values(WEAPS).find(x=>x.wType===c.wType)||null}
+const slot=i=>SLOTS[i];
+const pChar=i=>slot(i).charId?CHARS[slot(i).charId]:null;
+function pWeap(i){const s=slot(i),c=pChar(i);if(!c||!s.weapId)return null;const w=WEAPS[s.weapId];if(w&&w.wType===c.wType)return w;return Object.values(WEAPS).find(x=>x.wType===c.wType)||null}
+function pMaxSlv(i){const n=slot(i).cCvx.length;return n>=6?12:n>=3?11:10}
+function pSave(k,v){slot(ACTIVE)[k]=v}
+
 function pEffStats(si){
-  const s=ps(si),c=pChar(si),w=pWeap(si),sh=PARTY.shared;
-  if(!c||!w||!getCharBaseAtk(c.id,s.cLv))return null;
+  const s=slot(si),c=pChar(si),w=pWeap(si);if(!c||!w||!cBaseAtk(c.id,s.cLv))return null;
+  const fx=getDBFx(s.dbId,s.dbCond,s.dbStacks);
   const wCR=w.subType==='cr'?w.subVal:0,wCD=w.subType==='cd'?w.subVal:0;
   const stkCD=(w.stacks&&w.stacks.type==='cd')?s.wStk*w.stacks.per:0;
-  const tCR=wCR+s.critR;let tCD=wCD+s.critD+stkCD;
+  const tCR=wCR+s.critR;
+  let tCD=wCD+s.critD+stkCD+(fx.critDmgBonus||0);
   if(s.buf.skill&&c.hasSkillBuff)tCD+=c.skillBuffCD;
-  const charBase=getCharBaseAtk(c.id,s.cLv);
-  const atk=calcATK(charBase,w.baseAtk,w.atkPct+s.atkPct,s.atkFlat);
-  const defM=calcDef(s.cLv,sh.eLv,sh.isBoss,sh.dIgn,s.buf.spirit);
-  const resM=calcRes(sh.bRes,sh.rIgn,sh.rDown);
-  const critM=calcCrit(tCR,tCD);const conM=calcContam(s.buf.contam,s.chainP);
-  const dmgB=s.genDmg+s.elemDmg;
-  return{atk,defM,resM,critM,conM,dmgB,tCR,tCD};
+  const atk=cATK(cBaseAtk(c.id,s.cLv),w.baseAtk,w.atkPct+s.atkPct,s.atkFlat);
+  const rawDI=(PS.dIgn||0)+(fx.defIgnBonus||0);
+  const defM=cDef(s.cLv,PS.eLv,PS.isBoss,rawDI,s.buf.spirit);
+  const resM=cRes(PS.bRes,PS.rIgn+(fx.resIgnBonus||0),PS.rDown);
+  const critM=cCrit(tCR,tCD);const conM=cCon(s.buf.contam,s.chainP);
+  const dmgB=s.genDmg+s.elemDmg+(fx.elemDmgBonus||0);
+  return{atk,defM,resM,critM,conM,dmgB,tCR,tCD,rawDI,cLv:s.cLv,spirit:s.buf.spirit};
 }
-function pGetMaxSlv(si){const n=ps(si).cCvx.length;return n>=6?12:n>=3?11:10}
-function pShared(k,v){PARTY.shared[k]=v}
+
+function pRefresh(){
+  const eff=pEffStats(ACTIVE);
+  const ci=document.getElementById('cfg-batk'),cr=document.getElementById('cfg-bcr'),cd=document.getElementById('cfg-bcd');
+  const c=pChar(ACTIVE);
+  document.getElementById('cfg-nm').textContent=c?c.name:`キャラ${ACTIVE+1}`;
+  ci.textContent=eff?`ATK ${Math.round(eff.atk).toLocaleString('ja-JP')}`:'ATK —';
+  cr.textContent=eff?`CR ${eff.tCR.toFixed(1)}%`:'CR —';
+  cd.textContent=eff?`CD ${eff.tCD.toFixed(1)}%`:'CD —';
+}
+
 function pSetBoss(v){
-  PARTY.shared.isBoss=v;
-  document.getElementById('ps-mob').className='boss-btn'+(!v?' on-mob':'');
-  document.getElementById('ps-boss').className='boss-btn'+(v?' on-boss':'');
+  PS.isBoss=v;
+  document.getElementById('ps-mob').className='bbtn'+(v?'':' mob');
+  document.getElementById('ps-boss').className='bbtn'+(v?' bos':'');
   pRefresh();
 }
-function pSave(k,v){ps(PARTY.activeSlot)[k]=v}
-function pRefresh(){pUpdatePreview();pUpdateConfigBadge()}
 
-function pUpdatePreview(){
-  const eff=pEffStats(PARTY.activeSlot);
-  document.getElementById('cfg-badge-atk').textContent=eff?`ATK ${Math.round(eff.atk).toLocaleString('ja-JP')}`:'ATK —';
-  document.getElementById('cfg-badge-cr').textContent=eff?`CR ${eff.tCR.toFixed(1)}%`:'CR —';
-  document.getElementById('cfg-badge-cd').textContent=eff?`CD ${eff.tCD.toFixed(1)}%`:'CD —';
+/* party UI builders */
+function pPopCharSel(){
+  const sel=document.getElementById('p-char');sel.innerHTML='<option value="">— 未選択 —</option>';
+  Object.values(CHARS).forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=`${c.name}（${c.element}/${c.wType}）`;sel.appendChild(o)});
 }
-function pUpdateConfigBadge(){
-  const si=PARTY.activeSlot,c=pChar(si);
-  document.getElementById('cfg-name').textContent=c?c.name:`キャラ${si+1}`;
-  pUpdatePreview();
+function pPopWeapSel(si){
+  const c=pChar(si),sel=document.getElementById('p-weap');sel.innerHTML='';
+  if(!c){sel.innerHTML='<option value="">— 未選択 —</option>';return;}
+  const av=Object.values(WEAPS).filter(w=>w.wType===c.wType);
+  if(!av.length){sel.innerHTML=`<option>(${c.wType}種 未登録)</option>`;return;}
+  av.forEach(w=>{const o=document.createElement('option');o.value=w.id;o.textContent=`${w.name}（基礎攻${w.baseAtk}/${w.subLbl}+${w.subVal}%）`;sel.appendChild(o)});
+  const s=slot(si);if(av.find(w=>w.id===s.weapId))sel.value=s.weapId;else{s.weapId=av[0]?.id;sel.value=s.weapId;}
+}
+function pBuildCvx(si){
+  const el=document.getElementById('p-cvx'),s=slot(si),c=pChar(si)||{cvx:Array(6).fill('')};el.innerHTML='';
+  for(let i=1;i<=6;i++){const b=document.createElement('button');b.className='cvb'+(s.cCvx.includes(i)?' on':'');b.textContent=i;b.title=c.cvx[i-1]||'';b.onclick=()=>{const ix=s.cCvx.indexOf(i);if(ix>=0)s.cCvx.splice(ix,1);else s.cCvx.push(i);pBuildCvx(si);pUpdateSliders(si);pRefresh()};el.appendChild(b);}
+}
+function pUpdateWeapInfo(si){
+  const w=pWeap(si);const ss=document.getElementById('p-stkwrap');
+  if(!w){ss.style.display='none';return;}
+  if(w.stacks){ss.style.display='block';document.getElementById('p-stklbl').textContent=`${w.stacks.name}（0〜${w.stacks.max}）`;
+    const sl=document.getElementById('p-stk');sl.max=w.stacks.max;sl.value=Math.min(slot(si).wStk,w.stacks.max);pUpdateStkInfo(si);}
+  else{ss.style.display='none';slot(si).wStk=0;}
+}
+function pUpdateStkInfo(si){
+  const w=pWeap(si);if(!w||!w.stacks)return;
+  document.getElementById('p-stkn').textContent=slot(si).wStk;
+  document.getElementById('p-stkfx').textContent=w.stacks.type==='cd'?`クリダメ +${slot(si).wStk*w.stacks.per}%`:'';
+}
+function pUpdateSliders(si){
+  const mx=pMaxSlv(si);
+  ['n','s','ex','sup'].forEach(k=>{const s=slot(si);if(s.slv[k]>mx)s.slv[k]=mx;const sl=document.getElementById(`p-slv-${k}`);sl.max=mx;sl.value=s.slv[k];document.getElementById(`p-slvv-${k}`).textContent=s.slv[k];document.getElementById(`p-slvm-${k}`).textContent=mx;});
+}
+function pUpdateBufs(si){
+  const c=pChar(si);
+  document.getElementById('p-t-sk').disabled=!c?.hasSkillBuff;
+  document.getElementById('p-t-ex').disabled=!c?.hasEx;
+  if(!c?.hasSkillBuff)slot(si).buf.skill=false;if(!c?.hasEx)slot(si).buf.ex=false;
+  const map=[['spirit','spi'],['skill','sk'],['ex','ex'],['contam','con']];
+  map.forEach(([k,ab])=>{document.getElementById(`p-t-${ab}`)?.classList.toggle('on',!!slot(si).buf[k]);const tb=document.getElementById(`p-tb-${ab}`);if(tb)tb.textContent=slot(si).buf[k]?'✓':'';});
+}
+function pUpdateDB(si){
+  const s=slot(si),db=DRIVE_BLOCKS[s.dbId];
+  const condEl=document.getElementById('p-dbcond'),stkEl=document.getElementById('p-dbstkwrap');
+  if(!db||db.id==='none'){condEl.style.display='none';stkEl.style.display='none';return;}
+  condEl.style.display=db.hasConditional?'block':'none';
+  if(db.hasConditional){document.getElementById('p-dbcondlbl').textContent=db.condLabel;document.getElementById('p-dbcondt').classList.toggle('on',!!s.dbCond);document.getElementById('p-dbcondbox').textContent=s.dbCond?'✓':'';}
+  stkEl.style.display=db.hasStacks?'block':'none';
+  if(db.hasStacks){document.getElementById('p-dbstk').value=s.dbStacks||0;document.getElementById('p-dbstkn').textContent=s.dbStacks||0;document.getElementById('p-dbstkfx').textContent=`クリダメ +${(s.dbStacks||0)*8}%`;}
+}
+function pLoadUI(si){
+  const s=slot(si),c=pChar(si);
+  document.getElementById('p-char').value=s.charId||'';
+  document.getElementById('p-wlbl').textContent=c?`キャラクター（${c.wType}種）`:'キャラクター';
+  document.getElementById('p-elbl').textContent=(c?.element||'異能')+'ダメ効果%';
+  pPopWeapSel(si);
+  document.getElementById('p-lv').value=s.cLv;
+  document.getElementById('p-atkp').value=s.atkPct;document.getElementById('p-atkf').value=s.atkFlat;
+  document.getElementById('p-cr').value=s.critR;document.getElementById('p-cd').value=s.critD;
+  document.getElementById('p-cp').value=s.chainP;document.getElementById('p-gd').value=s.genDmg;
+  document.getElementById('p-ed').value=s.elemDmg;
+  pBuildCvx(si);pUpdateWeapInfo(si);pUpdateSliders(si);pUpdateBufs(si);
+  document.getElementById('p-db').value=s.dbId||'none';pUpdateDB(si);
+  buildAvailList(si);pRefresh();
 }
 
-/* Available attacks */
+/* party event handlers */
+function pOnChar(id){
+  const si=ACTIVE,s=slot(si);s.charId=id;s.cCvx=[];s.buf.skill=false;s.buf.ex=false;s.wStk=0;
+  if(id){const c=CHARS[id];const fw=Object.values(WEAPS).find(w=>w.wType===c.wType);if(fw)s.weapId=fw.id;}
+  updateSlotTabs();pLoadUI(si);
+}
+function pOnWeap(id){const s=slot(ACTIVE);s.weapId=id;s.wStk=0;pUpdateWeapInfo(ACTIVE);pRefresh()}
+function pOnStk(v){const si=ACTIVE;slot(si).wStk=parseInt(v)||0;pUpdateStkInfo(si);pRefresh()}
+function pOnSlv(k,v){const si=ACTIVE;const mx=pMaxSlv(si);slot(si).slv[k]=Math.min(mx,Math.max(1,parseInt(v)||1));document.getElementById(`p-slvv-${k}`).textContent=slot(si).slv[k];pRefresh()}
+function pTogBuf(k){const si=ACTIVE,s=slot(si),c=pChar(si);if(k==='skill'&&!c?.hasSkillBuff)return;if(k==='ex'&&!c?.hasEx)return;s.buf[k]=!s.buf[k];pUpdateBufs(si);if(k==='ex')buildAvailList(si);pRefresh()}
+function pOnDB(id){const si=ACTIVE;slot(si).dbId=id;slot(si).dbCond=false;slot(si).dbStacks=0;pUpdateDB(si);pRefresh()}
+function pTogDBCond(){const si=ACTIVE;slot(si).dbCond=!slot(si).dbCond;pUpdateDB(si);pRefresh()}
+function pOnDBStk(v){const si=ACTIVE;slot(si).dbStacks=parseInt(v)||0;document.getElementById('p-dbstkn').textContent=slot(si).dbStacks;document.getElementById('p-dbstkfx').textContent=`クリダメ +${slot(si).dbStacks*8}%`;pRefresh()}
+
+/* slot tabs */
+function switchSlot(si){
+  ACTIVE=si;
+  document.querySelectorAll('.stab').forEach((b,i)=>b.classList.toggle('on',i===si));
+  pLoadUI(si);
+}
+function updateSlotTabs(){
+  SLOTS.forEach((s,i)=>{const c=s.charId?CHARS[s.charId]:null;document.getElementById(`stab-${i}`).textContent=c?c.name:`キャラ${i+1}`;});
+}
+function toggleCfg(){
+  document.getElementById('cfg-body').classList.toggle('open');
+  document.getElementById('cfg-arr').classList.toggle('open');
+}
+
+/* available attacks list */
 function buildAvailList(si){
-  _avail=[];
-  const c=pChar(si);const el=document.getElementById('avail-list');
-  document.getElementById('avail-char-tag').textContent=c?c.name:'';
-  if(!c||!c.cats){el.innerHTML='<div class="rot-empty">キャラクターを選択してください</div>';return;}
-  const s=ps(si);const exOn=s.buf.ex&&c.hasEx;
+  AVAIL=[];const c=pChar(si);const el=document.getElementById('avail-list');
+  document.getElementById('avail-tag').textContent=c?c.name:'';
+  if(!c?.cats){el.innerHTML='<div class="no-data">キャラクターを選択してください</div>';return;}
+  const s=slot(si);const exOn=s.buf.ex&&c.hasEx;
   let html='';
   c.cats.forEach(cat=>{
-    const list=(exOn&&cat.exCombined)?cat.exCombined:cat.attacks;
+    const list=exOn&&cat.exAtks?cat.exAtks:cat.atks;
     if(!list?.length)return;
-    html+=`<div class="avail-cat-label">${cat.label}</div>`;
+    html+=`<div class="avail-cat">${cat.label}</div>`;
     list.forEach(a=>{
-      const idx=_avail.length;
-      _avail.push({...a,lvKey:cat.lvKey,color:cat.color,slotIdx:si,charName:c.name});
-      html+=`<button class="avail-btn c-${cat.color}" onclick="addToRot(${idx})">
-        <span class="avail-id">${a.id}</span>
-        <span class="avail-note">${a.note||''}</span>
-        <span class="avail-mult">×${a.m}%</span>
-        <span class="avail-add">＋</span>
+      const idx=AVAIL.length;
+      AVAIL.push({...a,lvKey:cat.lvKey,color:cat.color,slotIdx:si,charName:c.name});
+      const tStr=a.t===0?'即時':a.t.toFixed(2)+'s';
+      html+=`<button class="abtn ${cat.color}" onclick="addToRot(${idx})">
+        <span class="aid">${a.id}</span><span class="anote">${a.note||''}</span>
+        <span class="atime">${tStr}</span><span class="amult">×${a.m}%</span><span class="aadd">＋</span>
       </button>`;
     });
   });
   el.innerHTML=html;
 }
 
+/* rotation management */
 function addToRot(idx){
-  const a=_avail[idx];if(!a)return;
-  PARTY.rotation.push({...a,uid:`${Date.now()}_${Math.random().toString(36).substr(2,5)}`});
+  const a=AVAIL[idx];if(!a)return;
+  ROT.push({...a,qs:false,uid:`${Date.now()}_${Math.random().toString(36).substr(2,5)}`});
   buildRotList();
 }
-function removeFromRot(uid){
-  PARTY.rotation=PARTY.rotation.filter(x=>x.uid!==uid);
-  buildRotList();
+function removeFromRot(uid){const i=ROT.findIndex(x=>x.uid===uid);if(i>=0)ROT.splice(i,1);buildRotList()}
+function moveRot(uid,dir){
+  const i=ROT.findIndex(x=>x.uid===uid);if(i<0)return;
+  const j=i+dir;if(j<0||j>=ROT.length)return;
+  [ROT[i],ROT[j]]=[ROT[j],ROT[i]];buildRotList();
 }
-function clearAll(){PARTY.rotation=[];buildRotList()}
+function toggleQS(uid,checked){const e=ROT.find(x=>x.uid===uid);if(e)e.qs=checked;buildRotList()}
+function clearAll(){ROT.length=0;LR=null;buildRotList()}
 
 function buildRotList(results){
+  if(results!==undefined)LR=results;
   const el=document.getElementById('rot-list');
-  if(!PARTY.rotation.length){el.innerHTML='<div class="rot-empty">左の攻撃リストからクリックして追加<br><span style="font-size:10px;color:var(--txt2)">同じ攻撃を複数回追加することでコンボ構成が可能</span></div>';updateRotInfo(0,0);return;}
-  const totalMult=PARTY.rotation.reduce((s,x)=>s+x.m,0);
-  const totalDmg=(results&&results.total)||0;
-  el.innerHTML=PARTY.rotation.map((x,i)=>{
-    const dmg=results?results.items[i].dmg:null;
+  if(!ROT.length){
+    el.innerHTML='<div class="rot-empty">左の攻撃リストからクリックして追加<br><span style="font-size:10px">同じ攻撃を複数回追加可能 / QS=0.10sとして計算</span></div>';
+    ['rot-dmg','rot-dps','rot-info'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent='—'});
+    document.getElementById('rot-time').textContent='0s';
+    return;
+  }
+  const r=LR;
+  // LRが現在のROTと一致するか確認（UID・順序・件数すべて一致するときのみ有効）
+  const rValid=r&&r.items&&r.items.length===ROT.length&&ROT.every((x,i)=>r.items[i]&&r.items[i].uid===x.uid);
+  const totalMult=ROT.reduce((s,x)=>s+x.m,0);
+  const totalDmg=rValid?r.total:0;
+  const totalTime=ROT.reduce((s,x)=>s+getET(x),0);
+  document.getElementById('rot-time').textContent=totalTime.toFixed(2)+'s';
+  document.getElementById('rot-info').textContent=`${ROT.length}ヒット / ${totalMult.toFixed(1)}% / ${totalTime.toFixed(2)}s`;
+  el.innerHTML=ROT.map((x,i)=>{
+    const dmg=rValid?r.items[i]?.dmg:null;
     const pct=totalDmg&&dmg?dmg/totalDmg*100:0;
-    return`<div class="rot-entry si${x.slotIdx}">
-      <span class="re-num">${i+1}</span>
-      <span class="re-char">${x.charName}</span>
-      <span class="re-lbl">${x.id}</span>
-      <span class="re-mult">×${x.m}%</span>
-      <div class="re-dmg-wrap">
-        <span class="re-dmg">${dmg?dmg.toLocaleString('ja-JP'):'—'}</span>
-        <div class="re-pct-row">
-          <div class="re-bar-wrap"><div class="re-bar" style="width:${pct.toFixed(1)}%"></div></div>
-          <span class="re-pct">${dmg?pct.toFixed(1)+'%':'—'}</span>
-        </div>
+    const t=x.t||0;
+    const tD=t===0?`<span class="rtv inst">即時</span>`:(x.qs?`<span class="rtv qs">0.10s</span>`:`<span class="rtv">${t.toFixed(2)}s</span>`);
+    const qs=t>0?`<label class="rqsl" title="QS:0.1sとして計算"><input type="checkbox" class="rqsc" ${x.qs?'checked':''} onchange="toggleQS('${x.uid}',this.checked)"><span>QS</span></label>`:`<span class="rnoqs">QSなし</span>`;
+    return`<div class="rentry si${x.slotIdx}">
+      <span class="rnum">${i+1}</span>
+      <span class="rchar">${x.charName}</span>
+      <span class="rlbl">${x.id}</span>
+      <span class="rmult">×${x.m}%</span>
+      <div class="rtc">${tD}${qs}</div>
+      <div class="rdmgw">
+        <span class="rdmg">${dmg?dmg.toLocaleString('ja-JP'):'—'}</span>
+        <div class="rpctrow"><div class="rbarw"><div class="rbar" style="width:${pct.toFixed(1)}%"></div></div><span class="rpct">${dmg?pct.toFixed(1)+'%':'—'}</span></div>
       </div>
-      <button class="re-rm" onclick="removeFromRot('${x.uid}')">✕</button>
+      <div class="rreord">
+        <button class="rup" ${i===0?'disabled':''} onclick="moveRot('${x.uid}',-1)">▲</button>
+        <button class="rdn" ${i===ROT.length-1?'disabled':''} onclick="moveRot('${x.uid}',1)">▼</button>
+      </div>
+      <button class="rrm" onclick="removeFromRot('${x.uid}')" title="削除">✕</button>
     </div>`;
   }).join('');
-  updateRotInfo(PARTY.rotation.length,totalMult);
-  if(totalDmg) document.getElementById('rot-grand').textContent=totalDmg.toLocaleString('ja-JP');
+  if(rValid&&totalDmg){
+    document.getElementById('rot-dmg').textContent=totalDmg.toLocaleString('ja-JP');
+    const dps=totalTime>0?Math.round(totalDmg/totalTime):null;
+    document.getElementById('rot-dps').textContent=dps?dps.toLocaleString('ja-JP'):(totalTime===0?'∞':'—');
+  } else {
+    document.getElementById('rot-dmg').textContent='—';
+    document.getElementById('rot-dps').textContent='—';
+  }
 }
 
-function updateRotInfo(hits,mult){
-  document.getElementById('rot-info').textContent=hits?`${hits} ヒット / 合計倍率 ${mult.toFixed(1)}%`:'';
+/* party entry damage with per-entry DB effects */
+function calcEntryDmg(eff,entry,idx){
+  const s=slot(entry.slotIdx);const db=DRIVE_BLOCKS[s.dbId];
+  let extraCD=0,extraDI=0;
+  if(db&&db.id==='forestFirefly'){
+    const cnt=ROT.slice(0,idx).filter(r=>pChar(r.slotIdx)?.element==='霊').length;
+    extraCD=Math.min(cnt,7)*8;
+  }
+  if(db&&db.id==='lostLight'){
+    const hasEX=ROT.slice(0,idx).some(r=>r.slotIdx===entry.slotIdx&&r.lvKey==='ex');
+    if(hasEX)extraDI=25;
+  }
+  if(extraCD===0&&extraDI===0)return Math.round(cHit(eff.atk,entry.m,eff.dmgB,eff.critM,eff.defM,eff.resM,eff.conM));
+  const adjCritM=cCrit(eff.tCR,eff.tCD+extraCD);
+  const adjDefM=extraDI>0?cDef(eff.cLv,PS.eLv,PS.isBoss,eff.rawDI+extraDI,eff.spirit):eff.defM;
+  return Math.round(cHit(eff.atk,entry.m,eff.dmgB,adjCritM,adjDefM,eff.resM,eff.conM));
 }
 
-/* Slot switching */
-function switchSlot(si){
-  PARTY.activeSlot=si;
-  document.querySelectorAll('.slot-tab').forEach((b,i)=>b.classList.toggle('active',i===si));
-  pLoadUI(si);
-}
-function updateSlotTabs(){
-  PARTY.slots.forEach((s,i)=>{const c=s.charId?CHARS[s.charId]:null;document.getElementById(`slot-tab-${i}`).textContent=c?c.name:`キャラ${i+1}`});
-}
-
-function pOnCharChange(id){
-  const si=PARTY.activeSlot,s=ps(si);s.charId=id;s.cCvx=[];s.buf.skill=false;s.buf.ex=false;s.wStk=0;
-  if(id){const c=CHARS[id];const fw=Object.values(WEAPS).find(w=>w.wType===c.wType);if(fw)s.weapId=fw.id;}
-  updateSlotTabs();pLoadUI(si);
-}
-function pOnWeapChange(id){const s=ps(PARTY.activeSlot);s.weapId=id;s.wStk=0;pUpdateWeapInfo(PARTY.activeSlot);pRefresh()}
-function pOnStk(v){const si=PARTY.activeSlot;ps(si).wStk=parseInt(v)||0;pUpdateStkInfo(si);pRefresh()}
-function pTogBuf(k){
-  const si=PARTY.activeSlot,s=ps(si),c=pChar(si);
-  if(k==='skill'&&!c?.hasSkillBuff)return;if(k==='ex'&&!c?.hasEx)return;
-  s.buf[k]=!s.buf[k];pUpdateBufs(si);if(k==='ex')buildAvailList(si);pRefresh();
-}
-function pOnSlv(k,v){const si=PARTY.activeSlot;const mx=pGetMaxSlv(si);ps(si).slv[k]=Math.min(mx,Math.max(1,parseInt(v)||1));document.getElementById(`p-slvv-${k}`).textContent=ps(si).slv[k];pRefresh()}
-function pUpdateSliders(si){
-  const mx=pGetMaxSlv(si);['n','s','ex','sup'].forEach(k=>{if(ps(si).slv[k]>mx)ps(si).slv[k]=mx;const sl=document.getElementById(`p-slv-${k}`);sl.max=mx;sl.value=ps(si).slv[k];document.getElementById(`p-slvv-${k}`).textContent=ps(si).slv[k];document.getElementById(`p-slvm-${k}`).textContent=mx});
-}
-function pBuildCharCvx(si){
-  const el=document.getElementById('p-char-cvx'),s=ps(si),c=pChar(si)||{cvx:Array(6).fill('')};
-  el.innerHTML='';
-  for(let i=1;i<=6;i++){const b=document.createElement('button');b.className='cvx-btn'+(s.cCvx.includes(i)?' on':'');b.textContent=i;b.title=c.cvx?c.cvx[i-1]:'';b.onclick=()=>{const ix=s.cCvx.indexOf(i);if(ix>=0)s.cCvx.splice(ix,1);else s.cCvx.push(i);pBuildCharCvx(si);pUpdateSliders(si);pRefresh()};el.appendChild(b)}
-}
-function pUpdateWeapInfo(si){
-  const w=pWeap(si);if(!w)return;
-  const ss=document.getElementById('p-stack-sec');
-  if(w.stacks){ss.style.display='block';document.getElementById('p-stack-lbl').textContent=`${w.stacks.name}（0〜${w.stacks.max}）`;const sl=document.getElementById('p-weap-stk');sl.max=w.stacks.max;sl.value=Math.min(ps(si).wStk,w.stacks.max);pUpdateStkInfo(si);}
-  else{ss.style.display='none';ps(si).wStk=0}
-}
-function pUpdateStkInfo(si){
-  const w=pWeap(si);if(!w||!w.stacks)return;
-  document.getElementById('p-stk-num').textContent=ps(si).wStk;
-  document.getElementById('p-stk-info').textContent=w.stacks.type==='cd'?`クリダメ +${ps(si).wStk*w.stacks.per}%`:'';
-}
-function pUpdateBufs(si){
-  const c=pChar(si);
-  document.getElementById('p-t-skill').disabled=!c?.hasSkillBuff;document.getElementById('p-t-ex').disabled=!c?.hasEx;
-  ['spirit','skill','ex','contam'].forEach(k=>{document.getElementById(`p-t-${k}`)?.classList.toggle('on',!!ps(si).buf[k]);const tc=document.getElementById(`p-tc-${k}`);if(tc)tc.textContent=ps(si).buf[k]?'✓':''});
-}
-function popPCharSel(){const sel=document.getElementById('p-char-sel');sel.innerHTML='<option value="">— 未選択 —</option>';Object.values(CHARS).forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=`${c.name}（${c.element}/${c.wType}）`;sel.appendChild(o)})}
-function popPWeapSel(si){
-  const c=pChar(si),sel=document.getElementById('p-weap-sel');sel.innerHTML='';
-  if(!c){sel.innerHTML='<option value="">— 未選択 —</option>';return}
-  const av=Object.values(WEAPS).filter(w=>w.wType===c.wType);
-  if(!av.length){sel.innerHTML=`<option>(${c.wType}種 未登録)</option>`;return}
-  av.forEach(w=>{const o=document.createElement('option');o.value=w.id;o.textContent=`${w.name}（基礎攻${w.baseAtk}/${w.subLbl}+${w.subVal}%）`;sel.appendChild(o)});
-  const s=ps(si);if(av.find(w=>w.id===s.weapId))sel.value=s.weapId;else{s.weapId=av[0]?.id;sel.value=s.weapId}
-}
-function pLoadUI(si){
-  const s=ps(si),c=pChar(si);
-  document.getElementById('p-char-sel').value=s.charId||'';
-  document.getElementById('p-elem-lbl').textContent=(c?.element||'異能')+'ダメ効果%';
-  document.getElementById('p-wtype-lbl').textContent=c?`キャラクター（${c.wType}種）`:'キャラクター';
-  popPWeapSel(si);
-  document.getElementById('p-char-lv').value=s.cLv;
-  document.getElementById('p-atk-pct').value=s.atkPct;document.getElementById('p-atk-flat').value=s.atkFlat;
-  document.getElementById('p-crit-r').value=s.critR;document.getElementById('p-crit-d').value=s.critD;
-  document.getElementById('p-chain-p').value=s.chainP;document.getElementById('p-gen-dmg').value=s.genDmg;
-  document.getElementById('p-elem-dmg').value=s.elemDmg;
-  pBuildCharCvx(si);pUpdateWeapInfo(si);pUpdateSliders(si);pUpdateBufs(si);
-  buildAvailList(si);pUpdateConfigBadge();
-}
-
-/* Config accordion */
-function toggleConfig(){
-  const body=document.getElementById('config-body');const arrow=document.getElementById('cfg-arrow');
-  body.classList.toggle('open');arrow.classList.toggle('open');
-}
-
-/* Calculate party */
-function calcParty(){
-  if(!PARTY.rotation.length){alert('ローテーションに攻撃が追加されていません');return}
-  const effCache={};PARTY.slots.forEach((_,si)=>{effCache[si]=pEffStats(si)});
+/* party CALCULATE */
+function pCalc(){
+  if(!ROT.length){alert('ローテーションに攻撃が追加されていません');return;}
+  const effCache={};SLOTS.forEach((_,si)=>{effCache[si]=pEffStats(si)});
   let totalDmg=0;
-  const items=PARTY.rotation.map(x=>{
-    const eff=effCache[x.slotIdx];if(!eff){return{...x,dmg:0}}
-    const dmg=Math.round(hitDmg(eff.atk,x.m,eff.dmgB,eff.critM,eff.defM,eff.resM,eff.conM));
-    totalDmg+=dmg;return{...x,dmg};
+  const items=ROT.map((x,i)=>{
+    const eff=effCache[x.slotIdx];if(!eff)return{...x,dmg:0};
+    const dmg=calcEntryDmg(eff,x,i);totalDmg+=dmg;return{...x,dmg};
   });
-  const results={total:totalDmg,items};
+  const totalTime=ROT.reduce((s,x)=>s+getET(x),0);
+  const dps=totalTime>0?Math.round(totalDmg/totalTime):null;
+  const results={total:totalDmg,items,totalTime,dps};
   buildRotList(results);
-  document.getElementById('rot-grand').textContent=totalDmg.toLocaleString('ja-JP');
   buildPartyResults(results);
-  document.getElementById('party-results').classList.remove('show');void document.getElementById('party-results').offsetWidth;document.getElementById('party-results').classList.add('show');
-  document.getElementById('party-results').scrollIntoView({behavior:'smooth',block:'start'});
+  const rEl=document.getElementById('p-res');
+  rEl.classList.remove('show');void rEl.offsetWidth;rEl.classList.add('show');
+  rEl.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 function buildPartyResults(results){
-  const bEl=document.getElementById('party-results-body');
-  /* Per-slot totals */
-  const slotTotals=PARTY.slots.map((_,si)=>{
-    const chars=results.items.filter(x=>x.slotIdx===si);
-    const total=chars.reduce((s,x)=>s+x.dmg,0);
-    const hits=chars.length;
-    return{total,hits};
-  });
+  const bEl=document.getElementById('p-res-body');
   const grand=results.total;
-  const cards=PARTY.slots.map((s,si)=>{
-    const c=pChar(si);const name=c?c.name:`キャラ${si+1}`;
+  const dpsStr=results.dps?results.dps.toLocaleString('ja-JP'):(results.totalTime===0?'∞':'—');
+  const timeStr=results.totalTime?results.totalTime.toFixed(2)+'s':'0s';
+  const slotTotals=SLOTS.map((_,si)=>{
+    const its=results.items.filter(x=>x.slotIdx===si);
+    return{total:its.reduce((s,x)=>s+x.dmg,0),hits:its.length};
+  });
+  const cards=SLOTS.map((s,si)=>{
+    const c=pChar(si);const nm=c?c.name:`キャラ${si+1}`;
     const{total,hits}=slotTotals[si];
     const pct=grand&&total?total/grand*100:0;
-    return`<div class="psr-card si${si}${total?' active':''}">
-      <div class="psr-name">${name}</div>
-      <div class="psr-val">${total?total.toLocaleString('ja-JP'):'—'}</div>
-      <div class="psr-pct">${total?pct.toFixed(1)+'%':'—'} / ${hits} hits</div>
-      <div class="psr-bar-wrap"><div class="psr-bar" style="width:${pct.toFixed(1)}%"></div></div>
+    return`<div class="pcard si${si}${total?' act':''}">
+      <div class="pcn">${nm}</div>
+      <div class="pcv">${total?total.toLocaleString('ja-JP'):'—'}</div>
+      <div class="pcp">${total?pct.toFixed(1)+'%':'—'} / ${hits}hits</div>
+      <div class="pcbw"><div class="pcb" style="width:${pct.toFixed(1)}%"></div></div>
     </div>`;
   }).join('');
-  bEl.innerHTML=`<div class="party-summary">${cards}</div><div class="party-grand"><div class="pgt-lbl">パーティー合計ダメージ</div><div class="pgt-val">${grand.toLocaleString('ja-JP')}</div></div>`;
+  bEl.innerHTML=`
+    <div class="pdps-row">
+      <div class="pdps-card sk"><div class="pdps-lbl">DPS</div><div class="pdps-v">${dpsStr}</div></div>
+      <div class="pdps-card"  ><div class="pdps-lbl">ローテ時間</div><div class="pdps-v">${timeStr}</div></div>
+      <div class="pdps-card am"><div class="pdps-lbl">合計ダメージ</div><div class="pdps-v">${grand.toLocaleString('ja-JP')}</div></div>
+    </div>
+    <div class="psum">${cards}</div>
+    <div class="pgrand"><div class="pgl">パーティー合計ダメージ</div><div class="pgv">${grand.toLocaleString('ja-JP')}</div></div>`;
 }
 
-/* MAIN TAB SWITCH */
-function switchMainTab(which){
+/* ================================================================
+   MAIN TAB SWITCH
+================================================================ */
+function switchTab(which){
   ['single','party'].forEach(t=>{
     document.getElementById(`tab-${t}`).classList.toggle('show',t===which);
-    document.getElementById(`main-tab-${t}`).classList.toggle('active',t===which);
+    document.getElementById(`tn-${t}`).classList.toggle('on',t===which);
   });
 }
 
-/* INIT */
-const bind=(id,fn)=>{const el=document.getElementById(id);if(el)el.addEventListener('input',e=>{fn(e.target.value);refresh()})};
-
+/* ================================================================
+   INIT
+================================================================ */
 document.addEventListener('DOMContentLoaded',()=>{
-  rebuildAll();
-  bind('atk-pct',v=>S.atkPct=parseFloat(v)||0);bind('atk-flat',v=>S.atkFlat=parseFloat(v)||0);
-  bind('crit-r',v=>S.critR=parseFloat(v)||0);bind('crit-d',v=>S.critD=parseFloat(v)||0);
-  bind('chain-p',v=>S.chainP=parseFloat(v)||0);bind('gen-dmg',v=>S.genDmg=parseFloat(v)||0);
-  bind('elem-dmg',v=>S.elemDmg=parseFloat(v)||0);bind('char-lv',v=>{S.cLv=Math.max(1,parseInt(v)||80);updateCharChip()});
-  bind('enemy-lv',v=>S.eLv=Math.max(1,parseInt(v)||80));bind('base-res',v=>S.bRes=parseFloat(v)||0);
-  bind('res-ign',v=>S.rIgn=Math.max(0,parseFloat(v)||0));bind('res-down',v=>S.rDown=Math.max(0,parseFloat(v)||0));
-  bind('def-ign',v=>S.dIgn=Math.min(100,Math.max(0,parseFloat(v)||0)));
-  document.getElementById('weap-stk').addEventListener('input',e=>{S.wStk=parseInt(e.target.value)||0;updateStkInfo();refresh()});
-  popPCharSel();pLoadUI(0);updateSlotTabs();
-  // open config by default
-  document.getElementById('config-body').classList.add('open');document.getElementById('cfg-arrow').classList.add('open');
+  sInit();
+  pPopCharSel();
+  ['s-db','p-db'].forEach(id=>{
+    const sel=document.getElementById(id);sel.innerHTML='';
+    Object.values(DRIVE_BLOCKS).forEach(db=>{const o=document.createElement('option');o.value=db.id;o.textContent=db.name+(db.info?' — '+db.info:'');sel.appendChild(o)});
+  });
+  pLoadUI(0);updateSlotTabs();
+  // Boss buttons initial state
+  document.getElementById('s-mob').className='bbtn mob';
+  document.getElementById('ps-mob').className='bbtn mob';
 });
 </script>
 </body>
-</html>'''
+</html>
